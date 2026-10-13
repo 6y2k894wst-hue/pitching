@@ -1,0 +1,1976 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<title>Bullpen Log</title>
+<style>
+:root{
+  --bg:#f3f5f2;--card:#fff;--ink:#14171a;--muted:#4f5861;--line:#d3d9d1;
+  --brand:#14532d;--brand-soft:#e2efe5;--strike:#b45309;--strike-soft:#fef3c7;
+  --ball:#15803d;--ball-soft:#dcfce7;--danger:#b91c1c;--danger-soft:#fee2e2;
+  --warn:#92400e;--warn-soft:#fef9c3;--focus:#2563eb;--radius:14px;--tab-h:62px;--save-h:78px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:70px;scroll-padding-bottom:calc(var(--tab-h) + var(--save-h) + 20px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:17px;line-height:1.5;padding-bottom:calc(var(--tab-h) + 16px + env(safe-area-inset-bottom))}
+body.has-savebar{padding-bottom:calc(var(--tab-h) + var(--save-h) + 16px + env(safe-area-inset-bottom))}
+body.modal-open{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hidden{display:none!important}
+
+/* header */
+.appbar{position:sticky;top:0;z-index:40;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 14px;padding-top:calc(8px + env(safe-area-inset-top))}
+.brand{font-weight:800;font-size:19px;letter-spacing:.02em;white-space:nowrap}
+.hkpi{display:flex;gap:10px;align-items:baseline;font-size:14px;white-space:nowrap}
+.hkpi b{font-size:21px}
+.hkpi .hl{font-size:12px;background:rgba(255,255,255,.18);padding:1px 7px;border-radius:6px}
+.hkpi .sb{opacity:.85}
+@media(max-width:430px){.brand{font-size:16px}.hkpi{gap:7px;font-size:13px}.hkpi b{font-size:19px}.hkpi .sb{display:none}}
+.appbar{overflow:hidden}
+
+main{max-width:1180px;margin:0 auto;padding:12px}
+.view{display:none}.view.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+h2{font-size:20px;margin:0 0 10px}
+h3{font-size:16px;margin:0 0 8px;color:var(--muted);font-weight:800}
+p{margin:6px 0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grow{flex:1 1 auto}
+.muted{color:var(--muted);font-size:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mt{margin-top:10px}
+
+/* buttons & inputs */
+.btn{min-height:48px;padding:10px 16px;border-radius:12px;border:2px solid var(--line);background:#fff;font-weight:800}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.ghost-danger{color:var(--danger);border-color:#f0b4b4;background:#fff}
+.btn.small{min-height:40px;padding:6px 12px;font-size:15px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:#fff;font-weight:800;display:inline-flex;align-items:center;gap:6px;font-size:15px}
+.chip[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand)}
+.chip[aria-pressed="true"]::before{content:"✓";font-weight:900;color:var(--brand)}
+.chip .sw{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.2)}
+.type-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.type-chips .chip{border-radius:12px;justify-content:center;min-height:54px;font-size:16px;padding:6px 6px;border-width:2px}
+.type-chips .chip[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+.type-chips .chip[aria-pressed="true"]::before{color:#fff}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.seg button{min-height:44px;padding:6px 12px;border:0;background:#fff;font-weight:800;font-size:15px}
+.seg button+button{border-left:2px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
+.seg.wide{display:flex}.seg.wide button{flex:1}
+input[type=text],input[type=date],input[type=number],input[type=search],input:not([type]),select,textarea{
+  width:100%;min-height:48px;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:#fff}
+textarea{min-height:64px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--focus);outline:none;box-shadow:0 0 0 3px #bfdbfe}
+input.invalid{border-color:var(--danger);background:var(--danger-soft)}
+label.f{display:block;font-weight:800;font-size:15px;margin:12px 0 4px}
+.fieldmsg{font-size:14px;font-weight:800;min-height:1.2em;margin-top:4px}
+.fieldmsg.err{color:var(--danger)}.fieldmsg.warn{color:var(--warn)}
+input[type=color]{width:52px;height:44px;border:2px solid var(--line);border-radius:10px;padding:2px;background:#fff}
+input[type=checkbox]{width:24px;height:24px;accent-color:var(--brand)}
+
+/* record */
+.sessionbar .name{font-weight:800;font-size:18px}
+.setctl{display:flex;align-items:center;gap:6px}
+.setctl .setv{min-width:4.6em;text-align:center;font-weight:800;font-size:18px}
+.callbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.callbtn{min-height:74px;font-size:23px;font-weight:900;border-radius:14px;border:3px solid var(--line);background:#fff}
+.callbtn.s{color:var(--strike)}.callbtn.b{color:var(--ball)}
+.callbtn.s[aria-pressed="true"]{background:var(--strike);border-color:var(--strike);color:#fff}
+.callbtn.b[aria-pressed="true"]{background:var(--ball);border-color:var(--ball);color:#fff}
+.speedrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+.speed{font-size:28px!important;font-weight:900;text-align:center}
+details.card>summary{font-weight:800;cursor:pointer;min-height:40px;display:flex;align-items:center;list-style:none}
+details.card>summary::before{content:"▶";font-size:12px;margin-right:8px;color:var(--muted)}
+details.card[open]>summary::before{content:"▼"}
+.draftinfo{border:2px dashed #9fb8a5;background:#fbfdfb}
+.status{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.status span{font-size:13px;font-weight:800;padding:2px 8px;border-radius:6px;background:#f1f3f1;color:#6b7280}
+.status span.on{background:var(--brand-soft);color:var(--brand)}
+.notice{background:var(--warn-soft);border:1px solid #fde68a;color:#713f12;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;margin-bottom:12px}
+.banner{background:var(--danger-soft);color:#7f1d1d;border-bottom:2px solid #fca5a5;padding:10px 14px;font-weight:800;font-size:14px}
+.recent{display:flex;flex-direction:column;gap:6px}
+.recent button{display:flex;gap:8px;align-items:center;justify-content:space-between;text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;min-height:46px;font-size:15px}
+
+/* zone */
+.zone-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.zone-wrap{width:100%;max-width:min(100%,60vh,520px);margin:0 auto}
+.zone-wrap.small{max-width:min(100%,46vh,360px)}
+.zone-wrap svg{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none;border-radius:12px;background:#e9efe8}
+.zone-wrap.input svg{cursor:crosshair}
+.zl{fill:#374151;font-weight:800;pointer-events:none}
+.dl{fill:#fff;font-weight:900;paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:.7px;pointer-events:none}
+.cnt{fill:#111;font-weight:900;pointer-events:none}
+.zoombtns{display:inline-flex;gap:4px}
+.zoombtns button{min-width:44px;min-height:44px;border:2px solid var(--line);border-radius:10px;background:#fff;font-weight:900;font-size:18px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:14px;font-weight:700}
+.legend .li{display:inline-flex;align-items:center;gap:5px}
+.legend .mk{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 4px;border-radius:5px;color:#fff;font-size:12px;font-weight:900}
+.legend .shape{color:#374151}
+.detail{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+
+/* pitch card */
+.pcard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+.pcard.sel{border-color:#111;box-shadow:0 0 0 2px #111 inset}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:13px;font-weight:800;color:#fff;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.pill{display:inline-block;padding:1px 8px;border-radius:6px;font-size:13px;font-weight:900;border:1.5px solid}
+.pill.s{color:var(--strike);background:var(--strike-soft);border-color:#fcd34d}
+.pill.b{color:var(--ball);background:var(--ball-soft);border-color:#86efac}
+.pill.u{color:#6b7280;background:#f3f4f6;border-color:#d1d5db}
+.pill.warnp{color:#92400e;background:var(--warn-soft);border-color:#fde68a}
+.tagl{display:inline-block;font-size:12.5px;font-weight:700;background:#eef2ff;color:#3730a3;border-radius:6px;padding:1px 7px;margin:2px 3px 0 0}
+.memo{margin-top:4px;font-size:14px;white-space:pre-wrap;word-break:break-word;background:#f8faf8;border-radius:8px;padding:6px 8px}
+.hlist{display:flex;flex-direction:column;gap:8px}
+.hitem{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.hact{display:flex;flex-direction:column;gap:6px}
+
+/* summary */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(min-width:700px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi{background:var(--brand-soft);border-radius:12px;padding:10px 12px}
+.kpi .v{font-size:27px;font-weight:900;line-height:1.2}
+.kpi .l{font-size:13px;color:var(--muted);font-weight:800}
+.kpi .s{font-size:13px;color:var(--muted)}
+.ref{display:inline-block;font-size:12px;font-weight:800;color:#92400e;background:var(--warn-soft);border:1px solid #fde68a;border-radius:6px;padding:0 6px;margin-left:4px;white-space:nowrap}
+.bar-row{display:grid;grid-template-columns:minmax(5em,8em) 1fr 7.2em;gap:8px;align-items:center;margin:7px 0;font-size:15px}
+.bar-row .nm{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{height:22px;background:#eef1ed;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px}
+.bar-row .val{text-align:right;font-variant-numeric:tabular-nums;font-size:14px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.t{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.t th,.t td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.t th:first-child,.t td:first-child{text-align:left}
+.t thead th{color:var(--muted);font-size:12.5px}
+.t tr.click{cursor:pointer}.t tr.click:hover{background:#f5f8f5}
+.t tr.cur{background:var(--brand-soft)}
+details.sub{border-top:1px solid var(--line);padding:8px 0}
+details.sub>summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:center;gap:8px}
+.typedetail{display:grid;gap:10px;grid-template-columns:1fr;padding:6px 0}
+@media(min-width:600px){.typedetail{grid-template-columns:auto 1fr}}
+.zgrid{display:grid;grid-template-columns:repeat(5,36px);grid-template-rows:repeat(5,30px);gap:2px}
+.zgrid div{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border-radius:4px;background:#f1f4f0}
+.zgrid div.in{box-shadow:inset 0 0 0 2px #374151}
+.zgside{display:flex;justify-content:space-between;width:188px;font-size:11.5px;color:var(--muted);font-weight:700}
+
+/* settings lists */
+.list{display:flex;flex-direction:column;gap:6px}
+.li-row{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;flex-wrap:wrap}
+.li-row .nm{font-weight:800;flex:1 1 8em}
+.stats{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px}
+.stats dt{color:var(--muted);font-weight:700}.stats dd{margin:0;font-weight:800}
+
+/* layout desktop */
+@media(min-width:900px){
+  .record-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px;align-items:start}
+  .sum-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+  .set-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+}
+
+/* save bar & tab bar */
+.savebar{position:fixed;left:0;right:0;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom));z-index:35;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:8px 12px;display:none;box-shadow:0 -4px 14px rgba(0,0,0,.06)}
+body.has-savebar .savebar{display:block}
+.savebar .inner{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:auto 1fr;gap:8px}
+.savebtn{min-height:60px;font-size:19px}
+.undobtn{min-height:60px;font-size:14px;line-height:1.2;padding:6px 12px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:36;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar button{height:var(--tab-h);border:0;background:none;font-weight:800;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tabbar svg{width:24px;height:24px}
+.tabbar button[aria-current="page"]{color:var(--brand);box-shadow:inset 0 4px 0 var(--brand);background:#f6faf7}
+
+/* toast & modal */
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tab-h) + 12px + env(safe-area-inset-bottom));z-index:80;display:flex;flex-direction:column;gap:8px;width:min(94vw,480px);pointer-events:none}
+body.has-savebar #toasts{bottom:calc(var(--tab-h) + var(--save-h) + 12px + env(safe-area-inset-bottom))}
+.toast{pointer-events:none;background:#1f2937;color:#fff;padding:8px 10px 8px 12px;border-radius:12px;font-weight:800;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,.22);border-left:7px solid #9ca3af;font-size:15px}
+.toast.ok{border-left-color:#22c55e}.toast.warn{border-left-color:#facc15}
+.toast.error{background:#7f1d1d;border-left-color:#fca5a5}
+.toast button{pointer-events:auto;background:#fff;color:#111;border:0;border-radius:8px;padding:8px 12px;font-weight:900;min-height:40px;white-space:nowrap}
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:70;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:#fff;width:min(100%,580px);max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px 0}
+.modal h2{margin-bottom:6px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;position:sticky;bottom:0;background:#fff;padding:12px 0 calc(12px + env(safe-area-inset-bottom));margin-top:10px;border-top:1px solid var(--line)}
+@media(min-width:700px){.modal-back{align-items:center}.modal{border-radius:18px}}
+.flash{animation:fl .9s 1}
+@keyframes fl{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 4px #fca5a5}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <div class="brand">⚾ Bullpen Log</div>
+  <div class="hkpi" id="hdrKpi" aria-live="polite"></div>
+</header>
+<div id="storageBanner" class="banner hidden" role="alert"></div>
+
+<main>
+<!-- ================= 投球記録 ================= -->
+<section id="view-record" class="view" aria-label="投球記録">
+  <div id="sessionStart" class="card hidden">
+    <h2>練習セッションを開始</h2>
+    <p class="muted">1回のブルペン練習を1セッションとして記録します。終了しても記録は消えません。</p>
+    <label class="f" for="ssName">投手名（必須）</label>
+    <input id="ssName" type="text" maxlength="50" autocomplete="off" placeholder="例：山田 太郎">
+    <div id="ssNameMsg" class="fieldmsg err"></div>
+    <div class="two">
+      <div><label class="f" for="ssDate">練習日</label><input id="ssDate" type="date"></div>
+      <div><label class="f">想定打者</label>
+        <div class="seg wide" id="ssHand">
+          <button type="button" data-v="" aria-pressed="true">未設定</button>
+          <button type="button" data-v="R" aria-pressed="false">右</button>
+          <button type="button" data-v="L" aria-pressed="false">左</button>
+        </div>
+      </div>
+    </div>
+    <label class="f" for="ssMemo">練習メモ（任意）</label>
+    <textarea id="ssMemo" rows="2" maxlength="500" placeholder="例：フォームチェック、変化球中心"></textarea>
+    <button type="button" class="btn primary block mt" id="btnStart" style="min-height:58px;font-size:19px">セッションを開始する</button>
+    <p class="muted" id="ssPrev"></p>
+  </div>
+
+  <div id="recordMain" class="hidden">
+    <div class="card sessionbar">
+      <div class="row between">
+        <div>
+          <div class="name" id="sbName"></div>
+          <div class="muted" id="sbInfo"></div>
+        </div>
+        <button type="button" class="btn small ghost-danger" id="btnEndSession">練習を終了</button>
+      </div>
+      <div class="row between mt">
+        <div class="setctl" aria-label="セット番号">
+          <button type="button" class="btn small" id="btnSetMinus" aria-label="セットを1つ戻す">−</button>
+          <span class="setv" id="sbSet"></span>
+          <button type="button" class="btn small" id="btnSetPlus">次のセット ＋</button>
+        </div>
+        <div class="seg" id="sbHand" aria-label="想定打者">
+          <button type="button" data-v="">打者未設定</button>
+          <button type="button" data-v="R">右打者</button>
+          <button type="button" data-v="L">左打者</button>
+        </div>
+      </div>
+      <div class="muted mt" id="sbSetStats"></div>
+    </div>
+    <div id="recNag" class="notice hidden"></div>
+
+    <div class="record-grid">
+      <div>
+        <div class="card" id="typeCard">
+          <h3>球種</h3>
+          <div class="type-chips" id="typeChips"></div>
+        </div>
+        <div class="card" id="zoneCard">
+          <div class="row between"><h3 style="margin:0">コース</h3><span class="muted" id="recPersp"></span></div>
+          <div class="zone-tools mt">
+            <div class="seg" id="recMode">
+              <button type="button" data-v="input" aria-pressed="true">入力</button>
+              <button type="button" data-v="check" aria-pressed="false">確認</button>
+            </div>
+            <select id="recPast" style="width:auto;min-height:44px" aria-label="過去の投球の表示">
+              <option value="session">このセッションを表示</option>
+              <option value="set">このセットのみ表示</option>
+              <option value="none">過去の投球を隠す</option>
+            </select>
+            <select id="recColorBy" style="width:auto;min-height:44px" aria-label="色分け"></select>
+            <div class="zoombtns"><button type="button" data-zoom="rec:-" aria-label="縮小">−</button><button type="button" data-zoom="rec:+" aria-label="拡大">＋</button></div>
+          </div>
+          <div class="zone-wrap input" id="recZoneWrap"><svg id="recZone" role="img" aria-label="ストライクゾーン。タップで投球位置を記録"></svg></div>
+          <div class="row between mt">
+            <span class="muted" id="recCoord"></span>
+            <button type="button" class="btn small" id="btnClearCourse">コースを取り消す</button>
+          </div>
+          <div class="legend" id="recLegend"></div>
+          <div class="detail" id="recDetail"></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" id="callCard">
+          <h3>判定</h3>
+          <div class="callbtns" id="callBtns">
+            <button type="button" class="callbtn s" data-call="strike" aria-pressed="false">ストライク</button>
+            <button type="button" class="callbtn b" data-call="ball" aria-pressed="false">ボール</button>
+          </div>
+          <p class="muted">もう一度押すと未選択に戻ります。コース座標から自動判定はしません。</p>
+        </div>
+        <div class="card">
+          <label class="f" for="speedInput" style="margin-top:0">球速（km/h）</label>
+          <div class="speedrow">
+            <input id="speedInput" class="speed" type="text" inputmode="decimal" autocomplete="off" placeholder="未測定">
+            <button type="button" class="btn small" id="btnLastSpeed">前回値</button>
+            <button type="button" class="btn small" id="btnNoSpeed">未測定</button>
+          </div>
+          <div id="speedMsg" class="fieldmsg"></div>
+        </div>
+        <details class="card" id="moreDetails">
+          <summary>投球結果・球の質・メモ（任意）</summary>
+          <label class="f">投球結果（観察した事実）</label>
+          <div class="chips" id="resultChips"></div>
+          <label class="f">全体評価（主観評価）</label>
+          <div class="chips" id="gradeChips"></div>
+          <label class="f">質評価タグ（複数選択可）</label>
+          <div class="chips" id="tagChips"></div>
+          <label class="f" for="memoInput">メモ</label>
+          <textarea id="memoInput" rows="2" maxlength="500" placeholder="気づいたことがあれば"></textarea>
+        </details>
+        <div class="card draftinfo" id="draftInfo"></div>
+        <div class="card">
+          <h3>このセッションの直近の投球</h3>
+          <div class="recent" id="recRecent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= サマリー ================= -->
+<section id="view-summary" class="view" aria-label="サマリー">
+  <div class="card">
+    <div class="two">
+      <div><label class="f" for="sumScope" style="margin-top:0">セッション</label><select id="sumScope"></select></div>
+      <div><label class="f" for="sumSet" style="margin-top:0">セット</label><select id="sumSet"></select></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row between"><h3 style="margin:0">全体集計</h3><span id="sumRef"></span></div>
+    <div class="kpis mt" id="sumKpis"></div>
+  </div>
+  <div class="sum-grid">
+    <div>
+      <div class="card">
+        <h3>コース分布</h3>
+        <div class="zone-tools">
+          <select id="sumColorBy" style="width:auto;min-height:44px" aria-label="色分け"></select>
+          <div class="zoombtns"><button type="button" data-zoom="sum:-" aria-label="縮小">−</button><button type="button" data-zoom="sum:+" aria-label="拡大">＋</button></div>
+          <span class="muted" id="sumPersp"></span>
+        </div>
+        <div class="chips" id="sumTypeChips" aria-label="球種で絞り込み"></div>
+        <div class="zone-wrap mt"><svg id="sumZone" role="img" aria-label="投球コース分布。点をタップで詳細"></svg></div>
+        <div class="legend" id="sumLegend"></div>
+        <p class="muted" id="sumZoneNote"></p>
+        <div class="detail" id="sumDetail"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h3>球種別の投球割合</h3>
+        <div id="sumBars"></div>
+      </div>
+      <div class="card">
+        <h3>球種別集計</h3>
+        <div class="tbl-wrap" id="sumTypeTable"></div>
+        <div id="sumTypeDetails"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>比較</h3>
+    <div class="set-grid">
+      <div><h3 style="font-size:15px">セット別</h3><div class="tbl-wrap" id="cmpSets"></div></div>
+      <div><h3 style="font-size:15px">前半・後半</h3><div class="tbl-wrap" id="cmpHalves"></div></div>
+    </div>
+    <h3 class="mt" style="font-size:15px">過去セッションとの比較（行をタップで切替）</h3>
+    <div class="tbl-wrap" id="cmpSessions"></div>
+    <p class="muted">母数が少ない値は「参考」と表示します。統計的な有意性を示すものではありません。</p>
+  </div>
+</section>
+
+<!-- ================= 投球履歴 ================= -->
+<section id="view-history" class="view" aria-label="投球履歴">
+  <div class="card">
+    <div class="two">
+      <div><label class="f" for="histScope" style="margin-top:0">セッション</label><select id="histScope"></select></div>
+      <div><label class="f" for="histSort" style="margin-top:0">並び順</label>
+        <select id="histSort"><option value="desc">新しい順</option><option value="asc">古い順</option></select></div>
+      <div><label class="f" for="histType">球種</label><select id="histType"></select></div>
+      <div><label class="f" for="histCall">判定</label>
+        <select id="histCall"><option value="all">すべて</option><option value="strike">ストライク</option><option value="ball">ボール</option><option value="none">未判定</option></select></div>
+      <div><label class="f" for="histSet">セット</label><select id="histSet"></select></div>
+      <div><label class="f" for="histQ">メモ・タグ検索</label><input id="histQ" type="search" placeholder="キーワード"></div>
+    </div>
+  </div>
+  <div class="row between" style="margin:0 2px 8px">
+    <span class="muted" id="histCount"></span>
+    <button type="button" class="btn small" id="btnHistUndo">直前の操作を取り消す</button>
+  </div>
+  <div class="hlist" id="histList"></div>
+  <button type="button" class="btn block mt hidden" id="btnHistMore">さらに表示</button>
+</section>
+
+<!-- ================= 設定・データ管理 ================= -->
+<section id="view-settings" class="view" aria-label="設定・データ管理">
+  <div id="setNag" class="notice hidden"></div>
+  <div class="set-grid">
+    <div>
+      <div class="card">
+        <h2>基本設定</h2>
+        <label class="f" for="setPitcher">投手名（新しいセッションの初期値）</label>
+        <input id="setPitcher" type="text" maxlength="50">
+        <label class="f">コース表示の視点</label>
+        <div class="seg wide" id="setPersp">
+          <button type="button" data-v="catcher">捕手視点</button>
+          <button type="button" data-v="pitcher">投手視点</button>
+        </div>
+        <p class="muted">表示を左右反転するだけで、保存済みの座標は変わりません。座標は常に<b>捕手視点基準</b>（x=0 がゾーンの三塁側の端、x=100 が一塁側の端、y=0 が上端、y=100 が下端）で保存します。</p>
+        <label class="row mt" style="font-weight:800"><input type="checkbox" id="setCarry"> 保存後も前回の球種を選択したままにする</label>
+        <p class="muted">判定・球速・コース・評価は誤記録を防ぐため毎回リセットされます（球速は「前回値」ボタンで呼び出せます）。</p>
+      </div>
+      <div class="card">
+        <h2>球種</h2>
+        <div class="list" id="typeList"></div>
+        <div class="row mt">
+          <input id="newTypeName" type="text" maxlength="30" placeholder="球種名（例：ナックル）" class="grow" style="flex:1 1 10em">
+          <input id="newTypeAbbr" type="text" maxlength="3" placeholder="略称" style="width:5.5em">
+          <input id="newTypeColor" type="color" value="#0f766e" aria-label="色">
+          <button type="button" class="btn primary" id="btnAddType">追加</button>
+        </div>
+        <p class="muted">記録済みの球種を削除すると選択肢から非表示になり、過去の記録は球種名を保ったまま残ります。</p>
+      </div>
+      <div class="card">
+        <h2>質評価タグ</h2>
+        <div class="list" id="tagList"></div>
+        <div class="row mt">
+          <input id="newTagName" type="text" maxlength="30" placeholder="タグ名" class="grow" style="flex:1 1 10em">
+          <button type="button" class="btn primary" id="btnAddTag">追加</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>セッション一覧</h2>
+        <div class="list" id="sessionList"></div>
+      </div>
+      <div class="card">
+        <h2>データ管理</h2>
+        <dl class="stats" id="storageStats"></dl>
+        <p class="notice mt" style="margin-bottom:0">記録はこのブラウザ（端末）の LocalStorage にのみ保存され、他の端末やブラウザとは<b>自動同期されません</b>。ブラウザのデータ消去で失われるため、定期的に JSON バックアップを保存してください。</p>
+        <h3 class="mt">CSVエクスポート（UTF-8 BOM付き）</h3>
+        <label class="f" for="csvTarget" style="margin-top:0">出力するセッション</label>
+        <select id="csvTarget"></select>
+        <div class="two mt">
+          <button type="button" class="btn" id="btnCsvSession">選択セッションをCSV</button>
+          <button type="button" class="btn" id="btnCsvAll">全セッションをCSV</button>
+        </div>
+        <h3 class="mt">JSONバックアップ・復元</h3>
+        <div class="two">
+          <button type="button" class="btn primary" id="btnBackup">JSONでバックアップ</button>
+          <button type="button" class="btn" id="btnRestore">JSONから復元</button>
+        </div>
+        <input type="file" id="restoreFile" accept="application/json,.json" class="hidden">
+        <h3 class="mt">全データ削除</h3>
+        <button type="button" class="btn ghost-danger block" id="btnWipe">すべてのデータを削除…</button>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="savebar" id="saveBar">
+  <div class="inner">
+    <button type="button" class="btn undobtn" id="btnUndoLast">直前の<br>投球を取消</button>
+    <button type="button" class="btn primary savebtn" id="btnSave">保存して次へ</button>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="画面切り替え">
+  <button type="button" data-view="record"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 5c2 4 2 10 0 14M16 5c-2 4-2 10 0 14"/></svg>投球記録</button>
+  <button type="button" data-view="summary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>サマリー</button>
+  <button type="button" data-view="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>投球履歴</button>
+  <button type="button" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>設定・データ</button>
+</nav>
+
+<div id="toasts" aria-live="polite"></div>
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   定数
+   ============================================================ */
+const LS_KEY = 'bullpenLog.v1';
+const DRAFT_KEY = 'bullpenLog.draft.v1';
+const SCHEMA_VERSION = 1;
+const SMALL_N = 20;      // 全体集計で「参考値」とする判定数の閾値
+const SMALL_SUB = 10;    // 球種別・セット別などで「参考」とする閾値
+const SAVE_COOLDOWN_MS = 700;
+
+const DEFAULT_TYPES = [
+  ['ストレート','直','#dc2626'],['スライダー','SL','#2563eb'],['フォーク','FO','#7c3aed'],
+  ['カーブ','CB','#059669'],['チェンジアップ','CH','#d97706'],['ツーシーム','2S','#db2777'],
+  ['シンカー','SI','#0891b2'],['カットボール','CT','#65a30d'],['その他','他','#6b7280']
+];
+const DEFAULT_TAGS = ['有効なボール球','空振りを奪えた','狙い通りのコース','狙い通りの変化','甘い失投','抜け球','引っ掛け','その他'];
+const PALETTE = ['#0f766e','#b91c1c','#1e40af','#9333ea','#c2410c','#be185d','#0e7490','#4d7c0f','#a16207','#475569','#e11d48','#4338ca'];
+
+const CALLS = [
+  {v:'strike', l:'ストライク', a:'S', c:'#b45309'},
+  {v:'ball',   l:'ボール',     a:'B', c:'#15803d'},
+  {v:'none',   l:'未判定',     a:'－', c:'#9ca3af'}
+];
+const RESULTS = [
+  {v:'none',     l:'未記録',     a:'－', c:'#a8b0b9'},
+  {v:'looking',  l:'見逃し',     a:'見', c:'#0284c7'},
+  {v:'swinging', l:'空振り',     a:'空', c:'#dc2626'},
+  {v:'foul',     l:'ファウル',   a:'フ', c:'#d97706'},
+  {v:'inplay',   l:'インプレー', a:'打', c:'#7c3aed'},
+  {v:'other',    l:'その他',     a:'他', c:'#475569'}
+];
+const GRADES = [
+  {v:'good',   l:'良',     a:'良', c:'#15803d'},
+  {v:'normal', l:'普通',   a:'普', c:'#64748b'},
+  {v:'bad',    l:'悪',     a:'悪', c:'#dc2626'},
+  {v:'none',   l:'未評価', a:'－', c:'#a8b0b9'}
+];
+const COLOR_BY = {type:'色分け：球種', call:'色分け：判定', grade:'色分け：全体評価', result:'色分け：投球結果'};
+const mapBy = arr => Object.fromEntries(arr.map(x => [x.v, x]));
+const CALL_MAP = mapBy(CALLS), RESULT_MAP = mapBy(RESULTS), GRADE_MAP = mapBy(GRADES);
+const RESULT_KEYS = RESULTS.map(r => r.v);
+
+/* ゾーン描画用の表示座標系（SVGユーザー単位）。ゾーンは横100×縦120で描画 */
+const ZW = 100, ZH = 120, MX = 55, MY = 45;
+const VB = {w: ZW + MX*2, h: ZH + MY*2};
+
+/* ============================================================
+   ユーティリティ
+   ============================================================ */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function pad(n, w=2){ return String(n).padStart(w, '0'); }
+function round1(v){ return Math.round(v*10)/10; }
+function uid(prefix){
+  let rnd = '';
+  try { const a = new Uint32Array(2); crypto.getRandomValues(a); rnd = a[0].toString(36) + a[1].toString(36); }
+  catch(e){ rnd = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); }
+  return prefix + '_' + Date.now().toString(36) + rnd.slice(0, 10);
+}
+function localDateStr(d=new Date()){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function fmtTime(iso, ms=true){ const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` + (ms ? '.' + pad(d.getMilliseconds(),3) : ''); }
+function fmtDT(iso, ms=false){ if(!iso) return '—'; const d = new Date(iso); return `${localDateStr(d)} ${fmtTime(iso, ms)}`; }
+function localIsoWithOffset(iso){
+  const d = new Date(iso); const off = -d.getTimezoneOffset(); const a = Math.abs(off);
+  return `${localDateStr(d)}T${fmtTime(iso, true)}${off >= 0 ? '+' : '-'}${pad(Math.floor(a/60))}:${pad(a%60)}`;
+}
+function validIso(s){ return typeof s === 'string' && !isNaN(Date.parse(s)); }
+function tms(iso){ return Date.parse(iso) || 0; }
+function pct(v){ return v == null ? '—' : (v*100).toFixed(1) + '%'; }
+function spd(v){ return v == null ? '—' : (Math.round(v*10)/10).toFixed(1); }
+function safeName(s){ return String(s || '').trim().replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40) || 'noname'; }
+function bin(v){ if(v < 0) return 0; if(v < 100/3) return 1; if(v < 200/3) return 2; if(v <= 100) return 3; return 4; }
+function toHalfWidth(s){ return String(s).replace(/[０-９．]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)); }
+
+/* ============================================================
+   データ（LocalStorage）
+   ============================================================ */
+let DB = null;
+let storageOK = true;
+
+function defaultData(){
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    settings: {pitcherName:'', perspective:'catcher', carryType:true, colorBy:'type', lastBackupAt:null},
+    pitchTypes: DEFAULT_TYPES.map((t,i) => ({id:'pt_default_'+i, name:t[0], abbr:t[1], color:t[2], archived:false})),
+    qualityTags: DEFAULT_TAGS.map((n,i) => ({id:'tg_default_'+i, name:n, archived:false})),
+    sessions: [], pitches: [], activeSessionId: null, lastSavedAt: null
+  };
+}
+
+/** 保存データ・バックアップを検証して正規化する。不正なら Error を投げる（既存データは触らない） */
+function normalizeData(src){
+  if(!src || typeof src !== 'object' || Array.isArray(src)) throw new Error('データがJSONオブジェクトではありません');
+  if(src.app !== undefined && src.app !== 'BullpenLog') throw new Error('Bullpen Log のバックアップファイルではありません');
+  const d = (src.app === 'BullpenLog') ? src.data : src;
+  if(!d || typeof d !== 'object') throw new Error('data がありません');
+  if(!Array.isArray(d.sessions)) throw new Error('sessions（セッション一覧）がありません');
+  if(!Array.isArray(d.pitches)) throw new Error('pitches（投球一覧）がありません');
+  const out = defaultData();
+  const s = (d.settings && typeof d.settings === 'object') ? d.settings : {};
+  out.settings.pitcherName = typeof s.pitcherName === 'string' ? s.pitcherName.slice(0,50) : '';
+  out.settings.perspective = s.perspective === 'pitcher' ? 'pitcher' : 'catcher';
+  out.settings.carryType = s.carryType !== false;
+  out.settings.colorBy = COLOR_BY[s.colorBy] ? s.colorBy : 'type';
+  out.settings.lastBackupAt = validIso(s.lastBackupAt) ? s.lastBackupAt : null;
+
+  const seen = new Set();
+  const uniq = (id, what) => { if(seen.has(what+id)) throw new Error(`${what}のIDが重複しています: ${id}`); seen.add(what+id); };
+  if(Array.isArray(d.pitchTypes)){
+    out.pitchTypes = d.pitchTypes.map((t,i) => {
+      if(!t || typeof t.id !== 'string' || !t.id || typeof t.name !== 'string' || !t.name.trim()) throw new Error(`球種 ${i+1} 件目の形式が不正です`);
+      uniq(t.id, '球種');
+      return {id:t.id, name:t.name.trim().slice(0,30), abbr:String(t.abbr || t.name).trim().slice(0,3) || t.name.slice(0,1),
+              color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : '#6b7280', archived: !!t.archived};
+    });
+  }
+  if(Array.isArray(d.qualityTags)){
+    out.qualityTags = d.qualityTags.map((t,i) => {
+      if(!t || typeof t.id !== 'string' || !t.id || typeof t.name !== 'string' || !t.name.trim()) throw new Error(`質評価タグ ${i+1} 件目の形式が不正です`);
+      uniq(t.id, 'タグ');
+      return {id:t.id, name:t.name.trim().slice(0,30), archived: !!t.archived};
+    });
+  }
+  out.sessions = d.sessions.map((x,i) => {
+    if(!x || typeof x.id !== 'string' || !x.id) throw new Error(`セッション ${i+1} 件目にIDがありません`);
+    uniq(x.id, 'セッション');
+    if(typeof x.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(x.date)) throw new Error(`セッション ${i+1} 件目の練習日が不正です`);
+    if(!validIso(x.startedAt)) throw new Error(`セッション ${i+1} 件目の開始時刻が不正です`);
+    const cs = Number(x.currentSet);
+    return {id:x.id, pitcherName: String(x.pitcherName ?? '').slice(0,50), date:x.date, memo: String(x.memo ?? '').slice(0,500),
+            startedAt:x.startedAt, endedAt: validIso(x.endedAt) ? x.endedAt : null,
+            currentSet: Number.isInteger(cs) && cs >= 1 && cs <= 99 ? cs : 1,
+            batterHand: (x.batterHand === 'R' || x.batterHand === 'L') ? x.batterHand : ''};
+  });
+  const sessIds = new Set(out.sessions.map(x => x.id));
+  const typeIds = new Set(out.pitchTypes.map(t => t.id));
+  const tagIds = new Set(out.qualityTags.map(t => t.id));
+  const num = v => (v === null || v === undefined || v === '') ? null : Number(v);
+  out.pitches = d.pitches.map((p,i) => {
+    const w = `投球 ${i+1} 件目`;
+    if(!p || typeof p.id !== 'string' || !p.id) throw new Error(`${w}にIDがありません`);
+    uniq(p.id, '投球');
+    if(!sessIds.has(p.sessionId)) throw new Error(`${w}のセッションが見つかりません`);
+    if(!validIso(p.recordedAt)) throw new Error(`${w}の投球日時が不正です`);
+    if(typeof p.pitchTypeId !== 'string' || !p.pitchTypeId) throw new Error(`${w}の球種が不正です`);
+    if(!typeIds.has(p.pitchTypeId)){ // 球種定義が欠けていても記録は壊さない
+      out.pitchTypes.push({id:p.pitchTypeId, name: String(p.pitchTypeName || '不明な球種').slice(0,30), abbr:'?', color:'#6b7280', archived:true});
+      typeIds.add(p.pitchTypeId);
+    }
+    const speed = num(p.speed);
+    if(speed !== null && !(Number.isFinite(speed) && speed > 0 && speed <= 300)) throw new Error(`${w}の球速が不正です`);
+    let x = num(p.x), y = num(p.y);
+    if((x === null) !== (y === null)) throw new Error(`${w}のコース座標が片方だけです`);
+    if(x !== null && !(Number.isFinite(x) && Number.isFinite(y) && Math.abs(x) < 10000 && Math.abs(y) < 10000)) throw new Error(`${w}のコース座標が不正です`);
+    const call = p.call === 'strike' || p.call === 'ball' ? p.call : null;
+    if(p.call != null && call === null) throw new Error(`${w}の判定が不正です`);
+    const result = RESULT_KEYS.includes(p.result) ? p.result : 'none';
+    const grade = ['good','normal','bad'].includes(p.grade) ? p.grade : null;
+    const tags = Array.isArray(p.tags) ? p.tags.filter(t => typeof t === 'string') : [];
+    tags.forEach(t => { if(!tagIds.has(t)){ out.qualityTags.push({id:t, name:'不明なタグ', archived:true}); tagIds.add(t); } });
+    const set = Number(p.set);
+    return {id:p.id, sessionId:p.sessionId, recordedAt:p.recordedAt,
+            set: Number.isInteger(set) && set >= 1 && set <= 99 ? set : 1,
+            pitchTypeId:p.pitchTypeId, pitchTypeName: String(p.pitchTypeName || '').slice(0,30),
+            speed: speed === null ? null : round1(speed), x: x === null ? null : round1(x), y: y === null ? null : round1(y),
+            call, result, grade, tags: Array.from(new Set(tags)), memo: String(p.memo ?? '').slice(0,500),
+            batterHand: (p.batterHand === 'R' || p.batterHand === 'L') ? p.batterHand : '',
+            editedAt: validIso(p.editedAt) ? p.editedAt : undefined};
+  });
+  const act = out.sessions.find(x => x.id === d.activeSessionId && !x.endedAt);
+  out.activeSessionId = act ? act.id : null;
+  out.lastSavedAt = validIso(d.lastSavedAt) ? d.lastSavedAt : null;
+  return out;
+}
+
+function load(){
+  let raw = null;
+  try { raw = localStorage.getItem(LS_KEY); }
+  catch(e){
+    storageOK = false;
+    showBanner('このブラウザでは LocalStorage を利用できません（プライベートモードや設定でブロックされている可能性があります）。記録はページを閉じると失われます。こまめに JSON バックアップを保存してください。');
+    DB = defaultData(); return;
+  }
+  if(!raw){ DB = defaultData(); return; }
+  try { DB = normalizeData(JSON.parse(raw)); }
+  catch(e){
+    const bk = LS_KEY + '.corrupt.' + Date.now();
+    try { localStorage.setItem(bk, raw); } catch(_){}
+    DB = defaultData();
+    setTimeout(() => toast(`保存データを読み込めませんでした（${e.message}）。元のデータは「${bk}」として退避しました。`, 'error', {duration:12000}), 300);
+  }
+}
+
+function persist(){
+  DB.lastSavedAt = new Date().toISOString();
+  if(!storageOK){ return false; }
+  try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); return true; }
+  catch(e){
+    const quota = e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014);
+    toast(quota ? '保存容量が不足しているため保存できませんでした。JSONバックアップを取り、不要なセッションを削除してください。'
+                : '保存に失敗しました：' + (e && e.message || e), 'error', {duration:10000});
+    return false;
+  }
+}
+
+function showBanner(msg){ const b = $('#storageBanner'); b.textContent = msg; b.classList.remove('hidden'); }
+
+/* ---- 参照ヘルパー ---- */
+function sessionById(id){ return DB.sessions.find(s => s.id === id) || null; }
+function activeSession(){ return DB.sessions.find(s => s.id === DB.activeSessionId && !s.endedAt) || null; }
+function typeById(id){ return DB.pitchTypes.find(t => t.id === id) || null; }
+function typeOf(p){ return typeById(p.pitchTypeId) || {id:p.pitchTypeId, name:p.pitchTypeName || '不明な球種', abbr:'?', color:'#6b7280', archived:true}; }
+function tagName(id){ const t = DB.qualityTags.find(x => x.id === id); return t ? t.name : '不明なタグ'; }
+function byTime(a,b){ return tms(a.recordedAt) - tms(b.recordedAt) || (a.id < b.id ? -1 : 1); }
+function sessionPitches(sid){ return DB.pitches.filter(p => p.sessionId === sid).sort(byTime); }
+function sessionsSorted(){ return DB.sessions.slice().sort((a,b) => (b.date.localeCompare(a.date)) || tms(b.startedAt) - tms(a.startedAt)); }
+function seqMap(){
+  const m = new Map(), cnt = new Map();
+  DB.pitches.slice().sort(byTime).forEach(p => { const n = (cnt.get(p.sessionId) || 0) + 1; cnt.set(p.sessionId, n); m.set(p.id, n); });
+  return m;
+}
+function countBy(arr, f){ const m = new Map(); arr.forEach(x => { const k = f(x); m.set(k, (m.get(k) || 0) + 1); }); return m; }
+
+/* ============================================================
+   UI状態・入力中データ（ドラフト）
+   ============================================================ */
+const ui = {
+  view:'record', scope:null, setFilter:'all', chartTypes:new Set(),
+  recMode:'input', recPast:'session', recZoom:1, sumZoom:1,
+  recSel:[], sumSel:[], ssHand:'',
+  hist:{type:'all', call:'all', set:'all', q:'', sort:'desc', limit:50}
+};
+let draft = newDraft(null);
+let saving = false, lastSaveTs = 0;
+const undoStack = [];
+
+function newDraft(typeId){
+  return {id:null, recordedAt:null, pitchTypeId:typeId || null, x:null, y:null, call:null, speedText:'', result:'none', grade:null, tags:[], memo:''};
+}
+function draftHasContent(){ return !!(draft.id || draft.call || draft.speedText.trim() || draft.memo.trim() || draft.grade || draft.tags.length || draft.result !== 'none'); }
+function saveDraft(){ if(!storageOK) return; try { localStorage.setItem(DRAFT_KEY, JSON.stringify({sessionId:DB.activeSessionId, draft})); } catch(e){} }
+function loadDraft(){
+  try {
+    const o = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if(o && o.sessionId && o.sessionId === DB.activeSessionId && o.draft && typeof o.draft === 'object'){
+      const d = Object.assign(newDraft(null), o.draft);
+      if(d.pitchTypeId && !typeById(d.pitchTypeId)) d.pitchTypeId = null;
+      if(!Array.isArray(d.tags)) d.tags = [];
+      if(typeof d.speedText !== 'string') d.speedText = '';
+      if(typeof d.memo !== 'string') d.memo = '';
+      if(d.id && DB.pitches.some(p => p.id === d.id)) return; // 既に保存済みのドラフトは復元しない
+      draft = d;
+      if(draftHasContent()) setTimeout(() => toast('入力途中のデータを復元しました', 'info'), 400);
+    }
+  } catch(e){}
+}
+
+/* ---- 取り消し（メモリ内スナップショット） ---- */
+function pushUndo(label){
+  const e = {label, pitches: JSON.stringify(DB.pitches), sessions: JSON.stringify(DB.sessions), activeSessionId: DB.activeSessionId, t: Date.now()};
+  undoStack.push(e); if(undoStack.length > 30) undoStack.shift();
+  return e;
+}
+function undoEntry(e){
+  if(!undoStack.length){ toast('取り消せる操作はありません', 'warn'); return; }
+  if(e && undoStack[undoStack.length-1] !== e){ toast('その後に別の操作があったため、この取り消しはできません。履歴画面から修正してください。', 'warn', {duration:5000}); return; }
+  const u = undoStack.pop();
+  DB.pitches = JSON.parse(u.pitches); DB.sessions = JSON.parse(u.sessions); DB.activeSessionId = u.activeSessionId;
+  if(!activeSession() && DB.activeSessionId) DB.activeSessionId = null;
+  persist(); ensureScope(); renderAll();
+  toast(`「${u.label}」を取り消しました`, 'ok');
+}
+
+/* ============================================================
+   通知・モーダル
+   ============================================================ */
+function toast(msg, type='info', opt={}){
+  const box = $('#toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  const sp = document.createElement('span'); sp.textContent = msg; el.appendChild(sp);
+  if(opt.action){
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = opt.action.label;
+    b.addEventListener('click', () => { el.remove(); opt.action.fn(); });
+    el.appendChild(b);
+  }
+  if(type !== 'error') Array.from(box.children).forEach(c => { if(!c.classList.contains('error')) c.remove(); });
+  box.appendChild(el);
+  while(box.children.length > 2) box.firstElementChild.remove();
+  setTimeout(() => el.remove(), opt.duration || (type === 'error' ? 7000 : opt.action ? 6000 : 2600));
+}
+
+function openModal({title, body, buttons, onMount, backdropClose=true}){
+  return new Promise(resolve => {
+    const back = document.createElement('div');
+    back.className = 'modal-back';
+    back.innerHTML = '<div class="modal" role="dialog" aria-modal="true"><h2></h2><div class="mbody"></div><div class="modal-actions"></div></div>';
+    back.querySelector('h2').textContent = title;
+    const mb = back.querySelector('.mbody');
+    if(typeof body === 'string') mb.innerHTML = body; else if(body) mb.appendChild(body);
+    const act = back.querySelector('.modal-actions');
+    const prev = document.activeElement;
+    let done = false;
+    const close = v => {
+      if(done) return; done = true;
+      back.remove(); document.removeEventListener('keydown', onKey);
+      if(!$('#modalRoot').children.length) document.body.classList.remove('modal-open');
+      try { prev && prev.focus && prev.focus(); } catch(_){}
+      resolve(v);
+    };
+    buttons.forEach(b => {
+      const el = document.createElement('button');
+      el.type = 'button'; el.className = 'btn ' + (b.cls || ''); el.textContent = b.label;
+      el.addEventListener('click', async () => {
+        if(b.handler){
+          el.disabled = true; let r;
+          try { r = await b.handler(mb); } finally { el.disabled = false; }
+          if(r === false) return;
+          close(r === undefined ? b.value : r);
+        } else close(b.value);
+      });
+      act.appendChild(el);
+    });
+    const onKey = e => { if(e.key === 'Escape' && $('#modalRoot').lastElementChild === back) close(null); };
+    document.addEventListener('keydown', onKey);
+    if(backdropClose) back.addEventListener('click', e => { if(e.target === back) close(null); });
+    $('#modalRoot').appendChild(back);
+    document.body.classList.add('modal-open');
+    if(onMount) onMount(mb, close);
+    const f = mb.querySelector('[data-autofocus]') || act.querySelector('.btn');
+    if(f) f.focus();
+  });
+}
+function confirmModal({title, text, ok='OK', cancel='キャンセル', danger=false}){
+  const p = document.createElement('div');
+  String(text).split('\n').forEach(line => { const el = document.createElement('p'); el.textContent = line; p.appendChild(el); });
+  return openModal({title, body:p, buttons:[{label:cancel, value:false}, {label:ok, value:true, cls: danger ? 'danger' : 'primary'}]}).then(v => v === true);
+}
+
+/* ============================================================
+   集計（常に記録データから再計算）
+   ============================================================ */
+function calc(ps){
+  let s = 0, b = 0, sum = 0, max = null, min = null, ns = 0;
+  const grades = {good:0, normal:0, bad:0, none:0};
+  const results = Object.fromEntries(RESULT_KEYS.map(k => [k,0]));
+  const tags = new Map();
+  for(const p of ps){
+    if(p.call === 'strike') s++; else if(p.call === 'ball') b++;
+    if(p.speed != null){ ns++; sum += p.speed; max = max == null ? p.speed : Math.max(max, p.speed); min = min == null ? p.speed : Math.min(min, p.speed); }
+    grades[p.grade || 'none']++;
+    results[p.result || 'none']++;
+    p.tags.forEach(t => tags.set(t, (tags.get(t) || 0) + 1));
+  }
+  const judged = s + b;
+  return {n: ps.length, s, b, judged, unj: ps.length - judged, sr: judged ? s/judged : null,
+          sp:{n:ns, avg: ns ? sum/ns : null, max, min}, grades, results, tags,
+          rated: grades.good + grades.normal + grades.bad};
+}
+function refBadge(n, th){ return n < th ? `<span class="ref" title="母数が少ないため参考値です">参考 n=${n}</span>` : ''; }
+
+/* ============================================================
+   スコープ（表示対象セッション）
+   ============================================================ */
+function ensureScope(){
+  if(ui.scope === 'all') return;
+  if(ui.scope && sessionById(ui.scope)) return;
+  const a = activeSession();
+  if(a){ ui.scope = a.id; return; }
+  const latest = sessionsSorted()[0];
+  ui.scope = latest ? latest.id : 'all';
+  ui.setFilter = 'all';
+}
+function scopeBase(){ return ui.scope === 'all' ? DB.pitches.slice().sort(byTime) : sessionPitches(ui.scope); }
+function scopePitches(){
+  let ps = scopeBase();
+  if(ui.scope !== 'all' && ui.setFilter !== 'all') ps = ps.filter(p => p.set === Number(ui.setFilter));
+  return ps;
+}
+function sessionLabel(s, cnt){
+  const n = cnt != null ? cnt : DB.pitches.filter(p => p.sessionId === s.id).length;
+  return `${s.date} ${s.pitcherName}（${n}球）${s.endedAt ? '' : ' ●記録中'}`;
+}
+function fillScopeSelect(sel){
+  const counts = countBy(DB.pitches, p => p.sessionId);
+  const opts = [`<option value="all">全セッション（${DB.pitches.length}球）</option>`]
+    .concat(sessionsSorted().map(s => `<option value="${esc(s.id)}">${esc(sessionLabel(s, counts.get(s.id) || 0))}</option>`));
+  sel.innerHTML = opts.join('');
+  sel.value = ui.scope || 'all';
+}
+
+/* ============================================================
+   ストライクゾーン描画
+   ============================================================ */
+/* 保存座標（捕手視点基準の正規化座標）⇔ 表示座標 */
+function toDisp(x, y){ const nx = DB.settings.perspective === 'pitcher' ? 100 - x : x; return [nx/100*ZW, y/100*ZH]; }
+function fromDisp(u, v){ let x = u/ZW*100; const y = v/ZH*100; if(DB.settings.perspective === 'pitcher') x = 100 - x; return [x, y]; }
+/* 画面のタップ座標 → SVGユーザー座標（表示サイズ・拡大率・余白に依存しない変換） */
+function clientToSvg(svg, cx, cy){
+  const m = svg.getScreenCTM(); if(!m) return null;
+  const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy;
+  const r = pt.matrixTransform(m.inverse());
+  return [r.x, r.y];
+}
+function catOf(p, by){
+  if(by === 'call') return Object.assign({k:p.call || 'none'}, CALL_MAP[p.call || 'none']);
+  if(by === 'grade') return Object.assign({k:p.grade || 'none'}, GRADE_MAP[p.grade || 'none']);
+  if(by === 'result') return Object.assign({k:p.result || 'none'}, RESULT_MAP[p.result || 'none']);
+  const t = typeOf(p); return {k:t.id, l:t.name, a:t.abbr || t.name.slice(0,1), c:t.color};
+}
+function sideLabel(is3B, hand){
+  let t = is3B ? '三塁側' : '一塁側';
+  if(hand === 'R') t += is3B ? '（右打者の内角）' : '（右打者の外角）';
+  else if(hand === 'L') t += is3B ? '（左打者の外角）' : '（左打者の内角）';
+  return t;
+}
+function perspText(){ return DB.settings.perspective === 'pitcher' ? '投手視点（投手から見た表示）' : '捕手視点（捕手から見た表示）'; }
+
+function renderZone(svg, o){
+  const z = o.zoom || 1;
+  const vw = VB.w/z, vh = VB.h/z, vx = ZW/2 - vw/2, vy = ZH/2 - vh/2;
+  svg.setAttribute('viewBox', `${vx} ${vy} ${vw} ${vh}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  const k = 1/Math.sqrt(z);
+  const P = [];
+  P.push(`<rect x="${vx-20}" y="${vy-20}" width="${vw+40}" height="${vh+40}" fill="#e9efe8"/>`);
+  P.push(`<rect x="-9" y="-9" width="${ZW+18}" height="${ZH+18}" rx="3" fill="#dce6da"/>`);
+  P.push(`<rect x="0" y="0" width="${ZW}" height="${ZH}" fill="#fff" stroke="#1f2937" stroke-width="${1.5*k}"/>`);
+  [1/3, 2/3].forEach(f => {
+    P.push(`<line x1="${ZW*f}" y1="0" x2="${ZW*f}" y2="${ZH}" stroke="#6b7280" stroke-width="${.7*k}" stroke-dasharray="3 2"/>`);
+    P.push(`<line x1="0" y1="${ZH*f}" x2="${ZW}" y2="${ZH*f}" stroke="#6b7280" stroke-width="${.7*k}" stroke-dasharray="3 2"/>`);
+  });
+  const fs = 7.2*k, pd = 3*k;
+  const left3B = DB.settings.perspective === 'catcher';
+  P.push(`<text class="zl" x="${ZW/2}" y="${vy+pd+fs}" font-size="${fs}" text-anchor="middle">▲ 高め（上）</text>`);
+  P.push(`<text class="zl" x="${ZW/2}" y="${vy+vh-pd-fs*.15}" font-size="${fs}" text-anchor="middle">▼ 低め（下）</text>`);
+  P.push(`<text class="zl" font-size="${fs*.92}" text-anchor="middle" transform="translate(${vx+pd+fs} ${ZH/2}) rotate(-90)">${esc(sideLabel(left3B, o.hand))}</text>`);
+  P.push(`<text class="zl" font-size="${fs*.92}" text-anchor="middle" transform="translate(${vx+vw-pd-fs} ${ZH/2}) rotate(90)">${esc(sideLabel(!left3B, o.hand))}</text>`);
+
+  const r = 4.8*k;
+  const pos = [];
+  const sel = new Set(o.selected || []);
+  (o.pitches || []).forEach(p => {
+    if(p.x == null || p.y == null) return;
+    let [u, v] = toDisp(p.x, p.y); let clamped = false;
+    const lo = r + 1*k;
+    if(u < vx+lo){ u = vx+lo; clamped = true; } if(u > vx+vw-lo){ u = vx+vw-lo; clamped = true; }
+    if(v < vy+lo){ v = vy+lo; clamped = true; } if(v > vy+vh-lo){ v = vy+vh-lo; clamped = true; }
+    pos.push({p, u, v, clamped});
+  });
+  // 重なりのカウント
+  const cell = r*0.9, groups = new Map();
+  pos.forEach(q => { const key = Math.round(q.u/cell) + ',' + Math.round(q.v/cell); const g = groups.get(key) || []; g.push(q); groups.set(key, g); });
+  pos.forEach(q => {
+    const c = catOf(q.p, o.colorBy);
+    const op = o.faded ? .42 : .86;
+    const isSel = sel.has(q.p.id), isLatest = q.p.id === o.latestId;
+    const st = isSel ? '#000' : '#fff', sw = isSel ? 1.8*k : .9*k;
+    let shape;
+    if(q.p.call === 'strike') shape = `<circle cx="${q.u}" cy="${q.v}" r="${r}"/>`;
+    else if(q.p.call === 'ball') shape = `<rect x="${q.u-r*.88}" y="${q.v-r*.88}" width="${r*1.76}" height="${r*1.76}" rx="${r*.15}"/>`;
+    else shape = `<polygon points="${q.u},${q.v-r*1.15} ${q.u+r*1.05},${q.v+r*.8} ${q.u-r*1.05},${q.v+r*.8}"/>`;
+    P.push(`<g fill="${c.c}" fill-opacity="${op}" stroke="${st}" stroke-width="${sw}"${q.clamped ? ` stroke-dasharray="${1.5*k} ${1*k}"` : ''}>${shape}</g>`);
+    const lab = String(c.a); const lfs = r * (lab.length >= 2 ? .92 : 1.2);
+    P.push(`<text class="dl" x="${q.u}" y="${q.v + lfs*.36}" font-size="${lfs}" text-anchor="middle" opacity="${o.faded ? .7 : 1}">${esc(lab)}</text>`);
+    if(isLatest) P.push(`<circle cx="${q.u}" cy="${q.v}" r="${r*1.55}" fill="none" stroke="#111" stroke-width="${1.1*k}" stroke-dasharray="${2*k} ${1.4*k}" pointer-events="none"/>`);
+  });
+  groups.forEach(g => {
+    if(g.length < 2) return;
+    const q = g[g.length-1];
+    P.push(`<g pointer-events="none"><rect x="${q.u+r*.55}" y="${q.v-r*1.9}" width="${r*1.9}" height="${r*1.2}" rx="${r*.3}" fill="#fff" stroke="#111" stroke-width="${.5*k}"/><text class="cnt" x="${q.u+r*1.5}" y="${q.v-r*1.0}" font-size="${r*.95}" text-anchor="middle">×${g.length}</text></g>`);
+  });
+  if(o.draft && o.draft.x != null){
+    const [u, v] = toDisp(o.draft.x, o.draft.y); const R = 6.5*k;
+    P.push(`<g pointer-events="none" stroke="#111" stroke-width="${1.7*k}"><circle cx="${u}" cy="${v}" r="${R}" fill="rgba(250,204,21,.55)"/><line x1="${u-R*1.7}" y1="${v}" x2="${u-R*.45}" y2="${v}"/><line x1="${u+R*.45}" y1="${v}" x2="${u+R*1.7}" y2="${v}"/><line x1="${u}" y1="${v-R*1.7}" x2="${u}" y2="${v-R*.45}"/><line x1="${u}" y1="${v+R*.45}" x2="${u}" y2="${v+R*1.7}"/></g>`);
+  }
+  svg.innerHTML = P.join('');
+  svg._pos = pos; svg._r = r;
+}
+function hitTest(svg, cx, cy){
+  const pt = clientToSvg(svg, cx, cy); if(!pt) return [];
+  const lim = (svg._r || 5) * 1.7;
+  return (svg._pos || []).filter(q => Math.hypot(q.u - pt[0], q.v - pt[1]) <= lim).map(q => q.p).sort(byTime).reverse();
+}
+function renderLegend(el, by, ps){
+  let cats;
+  if(by === 'type'){
+    const m = new Map(); ps.forEach(p => { const c = catOf(p, 'type'); if(!m.has(c.k)) m.set(c.k, c); }); cats = Array.from(m.values());
+  } else cats = (by === 'call' ? CALLS : by === 'grade' ? GRADES : RESULTS);
+  el.innerHTML = cats.map(c => `<span class="li"><span class="mk" style="background:${c.c}">${esc(c.a)}</span>${esc(c.l)}</span>`).join('')
+    + `<span class="li shape">形：● ストライク　■ ボール　▲ 未判定</span>`
+    + (ps.length ? '' : `<span class="li shape">（表示する投球はありません）</span>`);
+}
+function courseText(p, withCoord=true){
+  if(p.x == null) return 'コース未記録';
+  const cx = bin(p.x), ry = bin(p.y);
+  const side = cx <= 1 ? '3B' : cx >= 3 ? '1B' : 'C';
+  let h;
+  if(side === 'C') h = '真ん中';
+  else if(p.batterHand === 'R') h = side === '3B' ? '内角' : '外角';
+  else if(p.batterHand === 'L') h = side === '3B' ? '外角' : '内角';
+  else h = side === '3B' ? '三塁側' : '一塁側';
+  let t;
+  if(cx >= 1 && cx <= 3 && ry >= 1 && ry <= 3){
+    const v = ['','高め','真ん中','低め',''][ry];
+    t = `ゾーン内 ${v}・${h}`;
+  } else {
+    const out = []; if(ry === 0) out.push('高め'); if(ry === 4) out.push('低め'); if(cx === 0 || cx === 4) out.push(h);
+    t = `ゾーン外（${out.join('・')}）`;
+  }
+  return withCoord ? `${t}［x ${p.x.toFixed(1)}, y ${p.y.toFixed(1)}］` : t;
+}
+function pitchCardHTML(p, seq, selected){
+  const t = typeOf(p), c = CALL_MAP[p.call || 'none'];
+  const tags = p.tags.map(id => `<span class="tagl">${esc(tagName(id))}</span>`).join('');
+  return `<div class="pcard${selected ? ' sel' : ''}">
+    <div class="row"><b>#${seq || '?'}</b><span class="badge" style="background:${t.color}">${esc(t.name)}</span>
+      <span class="pill ${p.call === 'strike' ? 's' : p.call === 'ball' ? 'b' : 'u'}">${c.l}</span>
+      <b>${p.speed != null ? spd(p.speed) + ' km/h' : '<span class="muted">球速未測定</span>'}</b></div>
+    <div class="muted">${esc(fmtDT(p.recordedAt, true))} ・ セット${p.set}</div>
+    <div class="muted">${esc(courseText(p))}</div>
+    <div class="muted">結果：${RESULT_MAP[p.result || 'none'].l} ／ 評価：${GRADE_MAP[p.grade || 'none'].l}</div>
+    ${tags ? `<div>${tags}</div>` : ''}
+    ${p.memo ? `<div class="memo">${esc(p.memo)}</div>` : ''}
+    <div class="row mt"><button type="button" class="btn small" data-edit="${esc(p.id)}">編集</button></div>
+  </div>`;
+}
+function renderDetail(el, list){
+  if(!list.length){ el.innerHTML = ''; return; }
+  const sm = seqMap();
+  el.innerHTML = `<div class="muted">${list.length > 1 ? `この付近に ${list.length} 球が重なっています` : '選択した投球'}</div>` + list.map(p => pitchCardHTML(p, sm.get(p.id), false)).join('');
+}
+function colorByOptions(sel){
+  sel.innerHTML = Object.entries(COLOR_BY).map(([k,l]) => `<option value="${k}">${l}</option>`).join('');
+  sel.value = DB.settings.colorBy;
+}
+
+/* ============================================================
+   画面：投球記録
+   ============================================================ */
+function parseSpeed(txt){
+  const s = toHalfWidth(String(txt ?? '').trim());
+  if(s === '') return {value:null};
+  if(!/^\d{1,3}(\.\d{1,2})?$/.test(s)) return {error:'球速は数値で入力してください（例：135 / 135.5）'};
+  const v = Number(s);
+  if(v <= 0) return {error:'0 km/h は記録できません。未測定の場合は空欄にしてください'};
+  if(v > 250) return {error:'球速が大きすぎます（250 km/h 以下で入力）'};
+  let warn = null;
+  if(v < 50) warn = '一般的な投球としてはかなり遅い値です';
+  else if(v > 170) warn = '非常に速い値です（入力ミスの可能性があります）';
+  return {value: round1(v), warn};
+}
+function chipsHTML(items, isOn){
+  return items.map(it => `<button type="button" class="chip" data-v="${esc(it.v)}" aria-pressed="${isOn(it.v) ? 'true' : 'false'}">${it.sw ? `<span class="sw" style="background:${it.sw}"></span>` : ''}${esc(it.l)}</button>`).join('');
+}
+function lastSpeedInSession(sid){
+  const ps = sessionPitches(sid).filter(p => p.speed != null); return ps.length ? ps[ps.length-1].speed : null;
+}
+
+function renderRecord(){
+  const s = activeSession();
+  $('#sessionStart').classList.toggle('hidden', !!s);
+  $('#recordMain').classList.toggle('hidden', !s);
+  document.body.classList.toggle('has-savebar', !!s && ui.view === 'record');
+  if(!s){
+    if(!$('#ssName').value) $('#ssName').value = DB.settings.pitcherName || '';
+    if(!$('#ssDate').value) $('#ssDate').value = localDateStr();
+    $$('#ssHand button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === ui.ssHand ? 'true' : 'false'));
+    const last = sessionsSorted()[0];
+    $('#ssPrev').textContent = last ? `前回：${sessionLabel(last)}。過去の記録はサマリー・履歴で確認できます。` : '';
+    return;
+  }
+  const ps = sessionPitches(s.id);
+  const c = calc(ps);
+  $('#sbName').textContent = s.pitcherName;
+  $('#sbInfo').textContent = `${s.date} ・ ${c.n}球 ・ S率 ${pct(c.sr)}（S${c.s} / B${c.b}${c.unj ? ` / 未判定${c.unj}` : ''}）${s.memo ? ' ・ ' + s.memo : ''}`;
+  $('#sbSet').textContent = `セット ${s.currentSet}`;
+  $('#btnSetMinus').disabled = s.currentSet <= 1;
+  $$('#sbHand button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === (s.batterHand || '') ? 'true' : 'false'));
+  const setPs = ps.filter(p => p.set === s.currentSet); const sc = calc(setPs);
+  $('#sbSetStats').textContent = `このセット：${sc.n}球 ・ S率 ${pct(sc.sr)} ・ 平均 ${spd(sc.sp.avg)} km/h`;
+
+  // バックアップ促し
+  const nag = backupNagText();
+  $('#recNag').classList.toggle('hidden', !nag);
+  if(nag) $('#recNag').innerHTML = `${esc(nag)} <button type="button" class="btn small" data-act="backup" style="margin-left:6px">今すぐバックアップ</button>`;
+
+  // 球種
+  const types = DB.pitchTypes.filter(t => !t.archived);
+  $('#typeChips').innerHTML = types.map(t => `<button type="button" class="chip" data-type="${esc(t.id)}" aria-pressed="${draft.pitchTypeId === t.id ? 'true' : 'false'}"><span class="sw" style="background:${t.color}"></span>${esc(t.name)}</button>`).join('')
+    || '<p class="muted">球種がありません。設定画面で追加してください。</p>';
+
+  // 判定
+  $$('#callBtns .callbtn').forEach(b => b.setAttribute('aria-pressed', draft.call === b.dataset.call ? 'true' : 'false'));
+  // 球速
+  const si = $('#speedInput');
+  if(document.activeElement !== si && si.value !== draft.speedText) si.value = draft.speedText;
+  const ls = lastSpeedInSession(s.id);
+  si.placeholder = ls != null ? `未測定（前回 ${spd(ls)}）` : '未測定';
+  $('#btnLastSpeed').disabled = ls == null;
+  showSpeedMsg();
+  // 結果・評価・タグ
+  $('#resultChips').innerHTML = chipsHTML(RESULTS, v => draft.result === v);
+  $('#gradeChips').innerHTML = chipsHTML(GRADES, v => (draft.grade || 'none') === v);
+  $('#tagChips').innerHTML = chipsHTML(DB.qualityTags.filter(t => !t.archived || draft.tags.includes(t.id)).map(t => ({v:t.id, l:t.name})), v => draft.tags.includes(v));
+  const mi = $('#memoInput'); if(document.activeElement !== mi && mi.value !== draft.memo) mi.value = draft.memo;
+  if(draft.result !== 'none' || draft.grade || draft.tags.length || draft.memo) $('#moreDetails').open = true;
+
+  renderRecZone();
+  renderDraftInfo();
+  // 直近
+  const sm = seqMap();
+  $('#recRecent').innerHTML = ps.slice(-5).reverse().map(p => {
+    const t = typeOf(p);
+    return `<button type="button" data-edit="${esc(p.id)}"><span><b>#${sm.get(p.id)}</b> <span class="badge" style="background:${t.color}">${esc(t.name)}</span> <span class="pill ${p.call === 'strike' ? 's' : p.call === 'ball' ? 'b' : 'u'}">${CALL_MAP[p.call || 'none'].a}</span> ${p.speed != null ? spd(p.speed) + 'km/h' : ''}</span><span class="muted">${fmtTime(p.recordedAt, false)} 編集›</span></button>`;
+  }).join('') || '<p class="muted">まだ投球がありません。</p>';
+  $('#btnUndoLast').disabled = !ps.length;
+}
+function renderRecZone(){
+  const s = activeSession(); if(!s) return;
+  let past = [];
+  if(ui.recPast === 'session') past = sessionPitches(s.id);
+  else if(ui.recPast === 'set') past = sessionPitches(s.id).filter(p => p.set === s.currentSet);
+  const latest = sessionPitches(s.id).slice(-1)[0];
+  renderZone($('#recZone'), {pitches:past, colorBy:DB.settings.colorBy, zoom:ui.recZoom, faded: ui.recMode === 'input',
+    draft: ui.recMode === 'input' ? draft : null, latestId: latest && latest.id, selected: ui.recSel, hand: s.batterHand});
+  $('#recZoneWrap').classList.toggle('input', ui.recMode === 'input');
+  $('#recPersp').textContent = perspText();
+  $$('#recMode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === ui.recMode ? 'true' : 'false'));
+  $('#recPast').value = ui.recPast;
+  $('#recColorBy').value = DB.settings.colorBy;
+  $('#recCoord').textContent = ui.recMode === 'check' ? '確認モード：点をタップすると詳細を表示' :
+    (draft.x != null ? `入力位置 x ${draft.x.toFixed(1)} / y ${draft.y.toFixed(1)}（${courseText({x:draft.x, y:draft.y, batterHand:s.batterHand}, false)}）` : 'ゾーン内外の投球位置をタップ（再タップで修正）');
+  $('#btnClearCourse').disabled = draft.x == null || ui.recMode !== 'input';
+  renderLegend($('#recLegend'), DB.settings.colorBy, past);
+  if(ui.recMode !== 'check') $('#recDetail').innerHTML = '';
+}
+function renderDraftInfo(){
+  const s = activeSession(); if(!s) return;
+  const n = DB.pitches.filter(p => p.sessionId === s.id).length + 1;
+  const sp = parseSpeed(draft.speedText);
+  const st = [
+    ['球種', !!draft.pitchTypeId], ['コース', draft.x != null], ['判定', !!draft.call], ['球速', sp.value != null],
+    ['結果', draft.result !== 'none'], ['評価', !!draft.grade || draft.tags.length > 0], ['メモ', !!draft.memo.trim()]
+  ];
+  $('#draftInfo').innerHTML = `
+    <div class="row between"><b>次の投球 #${n} ・ セット${s.currentSet}</b>
+      <button type="button" class="btn small" id="btnClearDraft"${draftHasContent() ? '' : ' disabled'}>入力をクリア</button></div>
+    <div class="muted">${draft.id ? `仮記録 ID：${esc(draft.id)}<br>記録時刻：${esc(fmtDT(draft.recordedAt, true))}（コースを最初にタップした時刻）` : 'コースをタップした時点で記録時刻とIDを確保します（コース未入力なら保存時刻）。'}</div>
+    <div class="status">${st.map(([l,on]) => `<span class="${on ? 'on' : ''}">${on ? '✓' : '－'} ${l}</span>`).join('')}</div>`;
+  $('#btnSave').textContent = `保存して次へ（#${n}）`;
+}
+function showSpeedMsg(){
+  const r = parseSpeed(draft.speedText), m = $('#speedMsg'), si = $('#speedInput');
+  si.classList.toggle('invalid', !!r.error);
+  if(r.error){ m.className = 'fieldmsg err'; m.textContent = r.error; }
+  else if(r.warn){ m.className = 'fieldmsg warn'; m.textContent = `⚠ ${r.warn}`; }
+  else { m.className = 'fieldmsg muted'; m.textContent = r.value != null ? '' : '空欄のまま保存すると「未測定」になります（0 km/h としては扱いません）'; }
+}
+
+async function savePitch(){
+  if(saving) return;
+  if(Date.now() - lastSaveTs < SAVE_COOLDOWN_MS) return; // 連打による二重登録防止
+  const s = activeSession();
+  if(!s){ toast('先にセッションを開始してください', 'error'); return; }
+  if(!draft.pitchTypeId || !typeById(draft.pitchTypeId)){ toast('球種を選択してください', 'error'); flash('#typeCard'); return; }
+  const sp = parseSpeed(draft.speedText);
+  if(sp.error){ toast(sp.error, 'error'); $('#speedInput').focus(); return; }
+  if(draft.x == null && !draft.call && sp.value == null){ toast('コース・判定・球速のいずれかを入力してください', 'error'); flash('#zoneCard'); return; }
+  saving = true; $('#btnSave').disabled = true;
+  try {
+    if(sp.warn){
+      const ok = await confirmModal({title:'球速の確認', text:`${spd(sp.value)} km/h は${sp.warn}。\nこのまま保存しますか？`, ok:'このまま保存'});
+      if(!ok) return;
+    }
+    const id = draft.id || uid('p');
+    if(DB.pitches.some(p => p.id === id)){ toast('この投球は保存済みです（二重登録を防止しました）', 'warn'); draft = newDraft(DB.settings.carryType ? draft.pitchTypeId : null); saveDraft(); renderRecord(); return; }
+    const t = typeById(draft.pitchTypeId);
+    const pitch = {id, sessionId:s.id, recordedAt: draft.recordedAt || new Date().toISOString(), set:s.currentSet,
+      pitchTypeId:t.id, pitchTypeName:t.name, speed:sp.value, x:draft.x, y:draft.y, call:draft.call,
+      result:draft.result || 'none', grade:draft.grade, tags:draft.tags.slice(), memo:draft.memo.trim().slice(0,500), batterHand:s.batterHand || ''};
+    const ue = pushUndo('投球の保存');
+    DB.pitches.push(pitch);
+    const ok = persist();
+    const n = DB.pitches.filter(p => p.sessionId === s.id).length;
+    draft = newDraft(DB.settings.carryType ? t.id : null);
+    saveDraft();
+    lastSaveTs = Date.now();
+    ui.recSel = [];
+    renderAll();
+    if(ok) toast(`#${n} ${t.name}${pitch.speed != null ? ' ' + spd(pitch.speed) + 'km/h' : ''} ${pitch.call ? CALL_MAP[pitch.call].l : ''} を保存しました`, 'ok', {action:{label:'元に戻す', fn:() => undoEntry(ue)}, duration:4000});
+    try { navigator.vibrate && navigator.vibrate(25); } catch(_){}
+  } finally {
+    saving = false; $('#btnSave').disabled = false;
+  }
+}
+function flash(sel){ const el = $(sel); if(!el) return; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); el.scrollIntoView({block:'nearest', behavior:'auto'}); }
+
+function undoLastPitch(){
+  const s = activeSession(); if(!s) return;
+  const ps = sessionPitches(s.id); const last = ps[ps.length-1];
+  if(!last){ toast('このセッションにはまだ投球がありません', 'warn'); return; }
+  const ue = pushUndo('直前の投球の取消');
+  DB.pitches = DB.pitches.filter(p => p.id !== last.id);
+  persist(); renderAll();
+  toast(`#${ps.length} ${typeOf(last).name} を取り消しました`, 'warn', {action:{label:'元に戻す', fn:() => undoEntry(ue)}, duration:6000});
+}
+
+function startSession(){
+  const name = $('#ssName').value.trim(), date = $('#ssDate').value, memo = $('#ssMemo').value.trim();
+  const nm = $('#ssNameMsg');
+  if(!name){ nm.textContent = '投手名を入力してください'; $('#ssName').classList.add('invalid'); $('#ssName').focus(); toast('投手名は必須です', 'error'); return; }
+  nm.textContent = ''; $('#ssName').classList.remove('invalid');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date))){ toast('練習日を正しく入力してください', 'error'); return; }
+  if(activeSession()){ toast('記録中のセッションがあります', 'error'); return; }
+  const s = {id:uid('s'), pitcherName:name.slice(0,50), date, memo:memo.slice(0,500), startedAt:new Date().toISOString(), endedAt:null, currentSet:1, batterHand:ui.ssHand};
+  DB.sessions.push(s); DB.activeSessionId = s.id; DB.settings.pitcherName = s.pitcherName;
+  draft = newDraft(null); saveDraft();
+  ui.scope = s.id; ui.setFilter = 'all'; ui.recSel = [];
+  $('#ssMemo').value = '';
+  if(persist()) toast('セッションを開始しました。球種を選んで記録を始めてください', 'ok');
+  renderAll();
+}
+async function endSession(){
+  const s = activeSession(); if(!s) return;
+  const n = DB.pitches.filter(p => p.sessionId === s.id).length;
+  const ok = await confirmModal({title:'練習を終了しますか？', text:`${s.pitcherName}（${s.date}）・${n}球の記録は保存されたまま残ります。` + (draftHasContent() ? '\n保存していない入力中のデータは破棄されます。' : ''), ok:'終了する'});
+  if(!ok) return;
+  const ue = pushUndo('練習の終了');
+  s.endedAt = new Date().toISOString(); DB.activeSessionId = null;
+  draft = newDraft(null); saveDraft();
+  persist(); renderAll();
+  toast('練習を終了しました。記録はサマリー・履歴で確認できます', 'ok', {action:{label:'元に戻す', fn:() => undoEntry(ue)}});
+}
+function changeSet(delta){
+  const s = activeSession(); if(!s) return;
+  const n = Math.min(99, Math.max(1, s.currentSet + delta));
+  if(n === s.currentSet) return;
+  s.currentSet = n; persist(); renderRecord(); renderHeader();
+  toast(`次の投球からセット ${n} として記録します`, 'info');
+}
+
+/* ============================================================
+   画面：サマリー
+   ============================================================ */
+function renderSummary(){
+  ensureScope();
+  fillScopeSelect($('#sumScope'));
+  const sumSet = $('#sumSet');
+  if(ui.scope === 'all'){ sumSet.innerHTML = '<option value="all">（セッション選択時のみ）</option>'; sumSet.disabled = true; ui.setFilter = 'all'; }
+  else {
+    const sets = Array.from(new Set(scopeBase().map(p => p.set))).sort((a,b) => a-b);
+    if(ui.setFilter !== 'all' && !sets.includes(Number(ui.setFilter))) ui.setFilter = 'all';
+    sumSet.disabled = false;
+    sumSet.innerHTML = '<option value="all">すべてのセット</option>' + sets.map(n => `<option value="${n}">セット ${n}</option>`).join('');
+    sumSet.value = String(ui.setFilter);
+  }
+  const ps = scopePitches();
+  const c = calc(ps);
+  $('#sumRef').innerHTML = c.judged < SMALL_N ? `<span class="ref">判定 ${c.judged} 球：参考値</span>` : '';
+  $('#sumKpis').innerHTML = `
+    <div class="kpi"><div class="l">総投球数</div><div class="v">${c.n}</div><div class="s">コース記録 ${ps.filter(p => p.x != null).length}球</div></div>
+    <div class="kpi"><div class="l">ストライク率</div><div class="v">${pct(c.sr)}</div><div class="s">S ${c.s} / B ${c.b}${c.unj ? ` ・ 未判定 ${c.unj}（分母から除外）` : ''}</div></div>
+    <div class="kpi"><div class="l">平均球速</div><div class="v">${spd(c.sp.avg)}<small style="font-size:14px"> km/h</small></div><div class="s">測定 ${c.sp.n}球${c.n - c.sp.n ? ` ・ 未測定 ${c.n - c.sp.n}（除外）` : ''}</div></div>
+    <div class="kpi"><div class="l">最速 / 最遅</div><div class="v">${spd(c.sp.max)}</div><div class="s">最遅 ${spd(c.sp.min)} km/h</div></div>`;
+
+  // 球種割合バー
+  const byType = groupByType(ps);
+  $('#sumBars').innerHTML = byType.length ? byType.map(g => {
+    const r = g.ps.length / ps.length;
+    return `<div class="bar-row"><span class="nm">${esc(g.t.name)}</span><div class="bar-track"><div class="bar-fill" style="width:${(r*100).toFixed(1)}%;background:${g.t.color}"></div></div><span class="val">${g.ps.length}球 ${pct(r)}</span></div>`;
+  }).join('') : '<p class="muted">投球がありません。</p>';
+
+  // 球種別テーブル
+  if(byType.length){
+    $('#sumTypeTable').innerHTML = `<table class="t"><thead><tr><th>球種</th><th>球数</th><th>割合</th><th>平均</th><th>最速</th><th>S率</th><th>S/B</th></tr></thead><tbody>` +
+      byType.map(g => { const k = calc(g.ps); return `<tr><td><span class="badge" style="background:${g.t.color}">${esc(g.t.name)}</span>${refBadge(k.judged, SMALL_SUB)}</td><td>${k.n}</td><td>${pct(k.n/ps.length)}</td><td>${spd(k.sp.avg)}</td><td>${spd(k.sp.max)}</td><td>${pct(k.sr)}</td><td>${k.s}/${k.b}${k.unj ? `<small class="muted"> 未${k.unj}</small>` : ''}</td></tr>`; }).join('') + '</tbody></table>';
+    $('#sumTypeDetails').innerHTML = byType.map(g => {
+      const k = calc(g.ps);
+      const tagTxt = Array.from(k.tags.entries()).sort((a,b) => b[1]-a[1]).map(([id,n]) => `<span class="tagl">${esc(tagName(id))} ${n}</span>`).join('') || '<span class="muted">タグなし</span>';
+      return `<details class="sub"><summary><span class="badge" style="background:${g.t.color}">${esc(g.t.name)}</span> 質評価とコース分布</summary>
+        <div class="typedetail"><div>${zgridHTML(g.ps)}</div><div>
+          <div><b>全体評価</b>：良 ${k.grades.good} ／ 普通 ${k.grades.normal} ／ 悪 ${k.grades.bad} ／ 未評価 ${k.grades.none}${k.rated ? `（良の割合 ${pct(k.grades.good/k.rated)}・評価済み ${k.rated}球中）` : ''}</div>
+          <div class="mt"><b>質評価タグ</b><br>${tagTxt}</div>
+          <div class="mt"><b>投球結果</b>：${RESULTS.filter(r => r.v !== 'none' && k.results[r.v]).map(r => `${r.l} ${k.results[r.v]}`).join(' ／ ') || '記録なし'}</div>
+          <p class="muted">全体評価・タグは記録者による主観評価です。</p>
+        </div></div></details>`;
+    }).join('');
+  } else { $('#sumTypeTable').innerHTML = '<p class="muted">投球がありません。</p>'; $('#sumTypeDetails').innerHTML = ''; }
+
+  // コース図
+  colorByOptions($('#sumColorBy'));
+  ui.chartTypes.forEach(id => { if(!byType.some(g => g.t.id === id)) ui.chartTypes.delete(id); });
+  $('#sumTypeChips').innerHTML = `<button type="button" class="chip" data-v="__all" aria-pressed="${ui.chartTypes.size === 0}">すべての球種</button>` +
+    byType.map(g => `<button type="button" class="chip" data-v="${esc(g.t.id)}" aria-pressed="${ui.chartTypes.has(g.t.id)}"><span class="sw" style="background:${g.t.color}"></span>${esc(g.t.name)}</button>`).join('');
+  const chartPs = ui.chartTypes.size ? ps.filter(p => ui.chartTypes.has(p.pitchTypeId)) : ps;
+  const sess = ui.scope !== 'all' ? sessionById(ui.scope) : null;
+  renderZone($('#sumZone'), {pitches:chartPs, colorBy:DB.settings.colorBy, zoom:ui.sumZoom, selected:ui.sumSel, hand: sess ? sess.batterHand : ''});
+  renderLegend($('#sumLegend'), DB.settings.colorBy, chartPs);
+  $('#sumPersp').textContent = perspText();
+  const noCourse = chartPs.filter(p => p.x == null).length;
+  $('#sumZoneNote').textContent = `表示 ${chartPs.length - noCourse}球${noCourse ? `（コース未記録 ${noCourse}球は非表示）` : ''}。点をタップすると詳細を表示します。点線枠の点は表示範囲外の位置を端に寄せて表示しています。`;
+  renderDetail($('#sumDetail'), DB.pitches.filter(p => ui.sumSel.includes(p.id)).sort(byTime).reverse());
+
+  renderCompare(ps);
+}
+function groupByType(ps){
+  const m = new Map();
+  ps.forEach(p => { const t = typeOf(p); if(!m.has(t.id)) m.set(t.id, {t, ps:[]}); m.get(t.id).ps.push(p); });
+  const order = DB.pitchTypes.map(t => t.id);
+  return Array.from(m.values()).sort((a,b) => b.ps.length - a.ps.length || order.indexOf(a.t.id) - order.indexOf(b.t.id));
+}
+function zgridHTML(ps){
+  const g = Array.from({length:5}, () => Array(5).fill(0)); let n = 0, none = 0;
+  ps.forEach(p => { if(p.x == null){ none++; return; } g[bin(p.y)][bin(p.x)]++; n++; });
+  const max = Math.max(1, ...g.flat());
+  const pitcher = DB.settings.perspective === 'pitcher';
+  let cells = '';
+  for(let r = 0; r < 5; r++) for(let dc = 0; dc < 5; dc++){
+    const c = pitcher ? 4 - dc : dc; const v = g[r][c];
+    const inZ = r >= 1 && r <= 3 && c >= 1 && c <= 3;
+    const a = v ? .15 + .75 * v / max : 0;
+    cells += `<div class="${inZ ? 'in' : ''}" style="${v ? `background:rgba(20,83,45,${a.toFixed(2)});color:${a > .5 ? '#fff' : '#14171a'}` : ''}">${v || ''}</div>`;
+  }
+  const l = pitcher ? '一塁側' : '三塁側', rr = pitcher ? '三塁側' : '一塁側';
+  return `<div class="zgside"><span>← ${l}</span><span>${rr} →</span></div><div class="zgrid" aria-label="コース分布（中央3×3がストライクゾーン）">${cells}</div>
+    <div class="muted" style="max-width:200px">中央3×3＝ゾーン、外周＝ゾーン外。コース記録 ${n}球${none ? `、未記録 ${none}球` : ''}</div>`;
+}
+function cmpRow(label, ps, extra=''){
+  const k = calc(ps);
+  return `<tr${extra}><td>${label}${refBadge(k.judged, SMALL_SUB)}</td><td>${k.n}</td><td>${pct(k.sr)}</td><td>${spd(k.sp.avg)}</td><td>${spd(k.sp.max)}</td><td>${k.rated ? pct(k.grades.good/k.rated) : '—'}</td></tr>`;
+}
+const CMP_HEAD = '<thead><tr><th></th><th>球数</th><th>S率</th><th>平均</th><th>最速</th><th>良の割合</th></tr></thead>';
+function renderCompare(ps){
+  // セット別
+  if(ui.scope === 'all') $('#cmpSets').innerHTML = '<p class="muted">セッションを1つ選択すると表示します。</p>';
+  else {
+    const base = scopeBase();
+    const sets = Array.from(new Set(base.map(p => p.set))).sort((a,b) => a-b);
+    $('#cmpSets').innerHTML = sets.length ? `<table class="t">${CMP_HEAD}<tbody>${sets.map(n => cmpRow(`セット${n}`, base.filter(p => p.set === n))).join('')}</tbody></table>` : '<p class="muted">投球がありません。</p>';
+  }
+  // 前半・後半
+  if(ps.length < 4) $('#cmpHalves').innerHTML = '<p class="muted">4球以上で表示します。</p>';
+  else {
+    const h = Math.ceil(ps.length/2);
+    $('#cmpHalves').innerHTML = `<table class="t">${CMP_HEAD}<tbody>${cmpRow(`前半（1〜${h}球目）`, ps.slice(0,h))}${cmpRow(`後半（${h+1}〜${ps.length}球目）`, ps.slice(h))}</tbody></table><p class="muted">表示範囲の投球を記録順に二分割しています。</p>`;
+  }
+  // 過去セッション
+  const ss = sessionsSorted();
+  $('#cmpSessions').innerHTML = ss.length ? `<table class="t"><thead><tr><th>日付・投手</th><th>球数</th><th>S率</th><th>平均</th><th>最速</th><th>良の割合</th></tr></thead><tbody>${
+    ss.slice(0, 30).map(s => cmpRow(`${esc(s.date)} ${esc(s.pitcherName)}${s.endedAt ? '' : ' ●'}`, sessionPitches(s.id), ` class="click${ui.scope === s.id ? ' cur' : ''}" data-sid="${esc(s.id)}" tabindex="0"`)).join('')
+  }</tbody></table>${ss.length > 30 ? `<p class="muted">新しい30セッションを表示（全${ss.length}件）</p>` : ''}` : '<p class="muted">セッションがありません。</p>';
+}
+
+/* ============================================================
+   画面：投球履歴
+   ============================================================ */
+function renderHistory(){
+  ensureScope();
+  fillScopeSelect($('#histScope'));
+  const h = ui.hist;
+  const base = scopeBase();
+  const types = groupByType(base).map(g => g.t);
+  if(h.type !== 'all' && !types.some(t => t.id === h.type)) h.type = 'all';
+  $('#histType').innerHTML = '<option value="all">すべて</option>' + types.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+  $('#histType').value = h.type;
+  const sets = Array.from(new Set(base.map(p => p.set))).sort((a,b) => a-b);
+  if(h.set !== 'all' && !sets.includes(Number(h.set))) h.set = 'all';
+  $('#histSet').innerHTML = '<option value="all">すべて</option>' + sets.map(n => `<option value="${n}">セット ${n}</option>`).join('');
+  $('#histSet').value = String(h.set);
+  $('#histCall').value = h.call; $('#histSort').value = h.sort;
+  if($('#histQ').value !== h.q && document.activeElement !== $('#histQ')) $('#histQ').value = h.q;
+
+  const q = h.q.trim().toLowerCase();
+  let ps = base.filter(p =>
+    (h.type === 'all' || p.pitchTypeId === h.type) &&
+    (h.call === 'all' || (h.call === 'none' ? !p.call : p.call === h.call)) &&
+    (h.set === 'all' || p.set === Number(h.set)) &&
+    (!q || (p.memo + ' ' + typeOf(p).name + ' ' + p.tags.map(tagName).join(' ')).toLowerCase().includes(q)));
+  if(h.sort === 'desc') ps.reverse();
+  const sm = seqMap();
+  // 連続記録（2秒以内）の検出：二重登録の可能性
+  const prevGap = new Map();
+  const bySess = new Map(); DB.pitches.slice().sort(byTime).forEach(p => { const prev = bySess.get(p.sessionId); if(prev) prevGap.set(p.id, tms(p.recordedAt) - tms(prev.recordedAt)); bySess.set(p.sessionId, p); });
+  $('#histCount').textContent = `${ps.length}件表示（対象 ${base.length}件）`;
+  const shown = ps.slice(0, h.limit);
+  const showSess = ui.scope === 'all';
+  $('#histList').innerHTML = shown.map(p => {
+    const t = typeOf(p); const s = sessionById(p.sessionId);
+    const gap = prevGap.get(p.id);
+    const tags = p.tags.map(id => `<span class="tagl">${esc(tagName(id))}</span>`).join('');
+    return `<div class="card hitem" style="margin:0">
+      <div>
+        <div class="row"><b>#${sm.get(p.id)}</b><span class="badge" style="background:${t.color}">${esc(t.name)}</span>
+          <span class="pill ${p.call === 'strike' ? 's' : p.call === 'ball' ? 'b' : 'u'}">${CALL_MAP[p.call || 'none'].l}</span>
+          <b>${p.speed != null ? spd(p.speed) + ' km/h' : '<span class="muted">未測定</span>'}</b>
+          ${gap != null && gap < 2000 ? '<span class="pill warnp">直前と2秒以内（重複?）</span>' : ''}</div>
+        <div class="muted">${esc(fmtDT(p.recordedAt, true))} ・ セット${p.set}${showSess && s ? ` ・ ${esc(s.date)} ${esc(s.pitcherName)}` : ''}</div>
+        <div class="muted">${esc(courseText(p))}</div>
+        <div class="muted">結果：${RESULT_MAP[p.result || 'none'].l} ／ 評価：${GRADE_MAP[p.grade || 'none'].l}</div>
+        ${tags ? `<div>${tags}</div>` : ''}${p.memo ? `<div class="memo">${esc(p.memo)}</div>` : ''}
+      </div>
+      <div class="hact"><button type="button" class="btn small" data-edit="${esc(p.id)}">編集</button><button type="button" class="btn small ghost-danger" data-del="${esc(p.id)}">削除</button></div>
+    </div>`;
+  }).join('') || '<div class="card muted">条件に合う投球はありません。</div>';
+  $('#btnHistMore').classList.toggle('hidden', ps.length <= h.limit);
+  $('#btnHistMore').textContent = `さらに表示（残り ${Math.max(0, ps.length - h.limit)}件）`;
+  $('#btnHistUndo').disabled = !undoStack.length;
+  $('#btnHistUndo').textContent = undoStack.length ? `取り消す：${undoStack[undoStack.length-1].label}` : '直前の操作を取り消す';
+}
+async function deletePitch(id){
+  const p = DB.pitches.find(x => x.id === id); if(!p) return false;
+  const sm = seqMap();
+  const ok = await confirmModal({title:'投球を削除', text:`#${sm.get(id)} ${typeOf(p).name}（${fmtDT(p.recordedAt, true)}）を削除しますか？`, ok:'削除する', danger:true});
+  if(!ok) return false;
+  const ue = pushUndo('投球の削除');
+  DB.pitches = DB.pitches.filter(x => x.id !== id);
+  ui.sumSel = ui.sumSel.filter(x => x !== id); ui.recSel = ui.recSel.filter(x => x !== id);
+  persist(); renderAll();
+  toast('投球を削除しました', 'warn', {action:{label:'元に戻す', fn:() => undoEntry(ue)}});
+  return true;
+}
+
+/* ---- 投球の編集 ---- */
+async function openEditPitch(id){
+  const p = DB.pitches.find(x => x.id === id);
+  if(!p){ toast('投球が見つかりません', 'error'); return; }
+  const e = {pitchTypeId:p.pitchTypeId, x:p.x, y:p.y, call:p.call, result:p.result || 'none', grade:p.grade, tags:p.tags.slice()};
+  const types = DB.pitchTypes.filter(t => !t.archived || t.id === p.pitchTypeId);
+  const tagsAvail = DB.qualityTags.filter(t => !t.archived || p.tags.includes(t.id));
+  const s = sessionById(p.sessionId);
+  const sm = seqMap();
+  const body = document.createElement('div');
+  body.innerHTML = `
+    <p class="muted">#${sm.get(p.id)} ・ ${esc(fmtDT(p.recordedAt, true))}<br>ID：${esc(p.id)}<br>セッション：${esc(s ? s.date + ' ' + s.pitcherName : '')}</p>
+    <label class="f" for="ePT">球種</label>
+    <select id="ePT">${types.map(t => `<option value="${esc(t.id)}">${esc(t.name)}${t.archived ? '（削除済み）' : ''}</option>`).join('')}${types.some(t => t.id === p.pitchTypeId) ? '' : `<option value="${esc(p.pitchTypeId)}">${esc(typeOf(p).name)}</option>`}</select>
+    <div class="two">
+      <div><label class="f" for="eSpeed">球速 km/h（空欄＝未測定）</label><input id="eSpeed" type="text" inputmode="decimal" autocomplete="off"></div>
+      <div><label class="f" for="eSet">セット番号</label><input id="eSet" type="number" min="1" max="99" step="1"></div>
+    </div>
+    <div id="eSpeedMsg" class="fieldmsg"></div>
+    <label class="f">コース（タップで変更）</label>
+    <div class="zone-wrap small input"><svg id="eZone" role="img" aria-label="コース編集"></svg></div>
+    <div class="row between"><span class="muted" id="eCoord"></span><button type="button" class="btn small" id="eClear">コースを未記録にする</button></div>
+    <label class="f">判定</label><div class="seg wide" id="eCall"><button type="button" data-v="">未判定</button><button type="button" data-v="strike">ストライク</button><button type="button" data-v="ball">ボール</button></div>
+    <label class="f">投球結果</label><div class="chips" id="eResult"></div>
+    <label class="f">全体評価</label><div class="chips" id="eGrade"></div>
+    <label class="f">質評価タグ</label><div class="chips" id="eTags"></div>
+    <label class="f" for="eMemo">メモ</label><textarea id="eMemo" rows="2" maxlength="500"></textarea>`;
+  $('#ePT', body).value = p.pitchTypeId;
+  $('#eSpeed', body).value = p.speed == null ? '' : String(p.speed);
+  $('#eSet', body).value = p.set;
+  $('#eMemo', body).value = p.memo;
+  const svg = $('#eZone', body);
+  const paint = () => {
+    renderZone(svg, {pitches:[], zoom:1, draft:{x:e.x, y:e.y}, hand:p.batterHand});
+    $('#eCoord', body).textContent = e.x != null ? `x ${e.x.toFixed(1)} / y ${e.y.toFixed(1)}（${courseText({x:e.x, y:e.y, batterHand:p.batterHand}, false)}）` : 'コース未記録';
+    $$('#eCall button', body).forEach(b => b.setAttribute('aria-pressed', (e.call || '') === b.dataset.v ? 'true' : 'false'));
+    $('#eResult', body).innerHTML = chipsHTML(RESULTS, v => e.result === v);
+    $('#eGrade', body).innerHTML = chipsHTML(GRADES, v => (e.grade || 'none') === v);
+    $('#eTags', body).innerHTML = chipsHTML(tagsAvail.map(t => ({v:t.id, l:t.name + (t.archived ? '（削除済み）' : '')})), v => e.tags.includes(v));
+  };
+  const speedMsg = () => { const r = parseSpeed($('#eSpeed', body).value), m = $('#eSpeedMsg', body); m.className = 'fieldmsg ' + (r.error ? 'err' : r.warn ? 'warn' : ''); m.textContent = r.error || (r.warn ? '⚠ ' + r.warn : ''); };
+  const result = await openModal({title:'投球の編集', body, backdropClose:false,
+    onMount: mb => {
+      paint(); speedMsg();
+      svg.addEventListener('click', ev => { const pt = clientToSvg(svg, ev.clientX, ev.clientY); if(!pt) return; const [x,y] = fromDisp(pt[0], pt[1]); e.x = round1(x); e.y = round1(y); paint(); });
+      $('#eClear', mb).addEventListener('click', () => { e.x = null; e.y = null; paint(); });
+      $('#eCall', mb).addEventListener('click', ev => { const b = ev.target.closest('button'); if(!b) return; e.call = b.dataset.v || null; paint(); });
+      $('#eResult', mb).addEventListener('click', ev => { const b = ev.target.closest('.chip'); if(!b) return; e.result = b.dataset.v; paint(); });
+      $('#eGrade', mb).addEventListener('click', ev => { const b = ev.target.closest('.chip'); if(!b) return; e.grade = b.dataset.v === 'none' ? null : b.dataset.v; paint(); });
+      $('#eTags', mb).addEventListener('click', ev => { const b = ev.target.closest('.chip'); if(!b) return; const v = b.dataset.v; e.tags = e.tags.includes(v) ? e.tags.filter(x => x !== v) : e.tags.concat(v); paint(); });
+      $('#eSpeed', mb).addEventListener('input', speedMsg);
+    },
+    buttons:[
+      {label:'削除', cls:'ghost-danger', handler: async () => { const ok = await deletePitch(id); return ok ? 'deleted' : false; }},
+      {label:'キャンセル', value:null},
+      {label:'変更を保存', cls:'primary', handler: async mb => {
+        const sp = parseSpeed($('#eSpeed', mb).value);
+        if(sp.error){ toast(sp.error, 'error'); $('#eSpeed', mb).focus(); return false; }
+        const setN = Number($('#eSet', mb).value);
+        if(!Number.isInteger(setN) || setN < 1 || setN > 99){ toast('セット番号は1〜99の整数で入力してください', 'error'); return false; }
+        if(sp.warn && !(await confirmModal({title:'球速の確認', text:`${spd(sp.value)} km/h は${sp.warn}。\nこのまま保存しますか？`, ok:'このまま保存'}))) return false;
+        const idx = DB.pitches.findIndex(x => x.id === id);
+        if(idx < 0){ toast('対象の投球が見つかりません（既に削除された可能性があります）', 'error'); return 'gone'; }
+        const t = typeById($('#ePT', mb).value) || typeOf(p);
+        const ue = pushUndo('投球の編集');
+        DB.pitches[idx] = Object.assign({}, DB.pitches[idx], {pitchTypeId:t.id, pitchTypeName:t.name, speed:sp.value, set:setN,
+          x:e.x, y:e.y, call:e.call, result:e.result, grade:e.grade, tags:e.tags.slice(), memo:$('#eMemo', mb).value.trim().slice(0,500), editedAt:new Date().toISOString()});
+        persist(); renderAll();
+        toast('投球を更新しました', 'ok', {action:{label:'元に戻す', fn:() => undoEntry(ue)}});
+        return 'saved';
+      }}
+    ]});
+  return result;
+}
+
+/* ============================================================
+   画面：設定・データ管理
+   ============================================================ */
+function backupNagText(){
+  if(!DB.pitches.length) return '';
+  const lb = DB.settings.lastBackupAt;
+  if(!lb) return `まだJSONバックアップがありません（${DB.pitches.length}球を記録済み）。端末の故障やデータ消去に備えて保存してください。`;
+  const since = DB.pitches.filter(p => tms(p.recordedAt) > tms(lb)).length;
+  const days = Math.floor((Date.now() - tms(lb)) / 864e5);
+  if(days >= 7 && since > 0) return `最終バックアップから${days}日経過し、${since}球が未バックアップです。`;
+  if(since >= 100) return `最終バックアップ以降に${since}球を記録しています。`;
+  return '';
+}
+function renderSettings(){
+  const sp = $('#setPitcher'); if(document.activeElement !== sp) sp.value = DB.settings.pitcherName;
+  $$('#setPersp button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === DB.settings.perspective ? 'true' : 'false'));
+  $('#setCarry').checked = DB.settings.carryType;
+  const nag = backupNagText();
+  $('#setNag').classList.toggle('hidden', !nag); $('#setNag').textContent = nag;
+
+  const used = countBy(DB.pitches, p => p.pitchTypeId);
+  const tRow = t => `<div class="li-row"><span class="sw" style="width:18px;height:18px;border-radius:50%;background:${t.color};display:inline-block"></span>
+      <span class="nm">${esc(t.name)} <span class="muted">（${esc(t.abbr)}）${used.get(t.id) || 0}球</span></span>
+      ${t.archived ? `<button type="button" class="btn small" data-trestore="${esc(t.id)}">復元</button>` :
+        `<button type="button" class="btn small" data-tedit="${esc(t.id)}">編集</button><button type="button" class="btn small ghost-danger" data-tdel="${esc(t.id)}">削除</button>`}</div>`;
+  const act = DB.pitchTypes.filter(t => !t.archived), arc = DB.pitchTypes.filter(t => t.archived);
+  $('#typeList').innerHTML = act.map(tRow).join('') + (arc.length ? `<div class="muted mt">非表示（削除済み）の球種</div>` + arc.map(tRow).join('') : '');
+
+  const tagUsed = new Map(); DB.pitches.forEach(p => p.tags.forEach(t => tagUsed.set(t, (tagUsed.get(t) || 0) + 1)));
+  const gRow = t => `<div class="li-row"><span class="nm">${esc(t.name)} <span class="muted">${tagUsed.get(t.id) || 0}回</span></span>
+      ${t.archived ? `<button type="button" class="btn small" data-grestore="${esc(t.id)}">復元</button>` :
+        `<button type="button" class="btn small" data-gedit="${esc(t.id)}">編集</button><button type="button" class="btn small ghost-danger" data-gdel="${esc(t.id)}">削除</button>`}</div>`;
+  const ga = DB.qualityTags.filter(t => !t.archived), gz = DB.qualityTags.filter(t => t.archived);
+  $('#tagList').innerHTML = ga.map(gRow).join('') + (gz.length ? `<div class="muted mt">非表示（削除済み）のタグ</div>` + gz.map(gRow).join('') : '');
+
+  const counts = countBy(DB.pitches, p => p.sessionId);
+  const ss = sessionsSorted();
+  $('#sessionList').innerHTML = ss.map(s => `<div class="li-row"><span class="nm">${esc(s.date)} ${esc(s.pitcherName)} <span class="muted">${counts.get(s.id) || 0}球 ・ ${s.endedAt ? '終了' : '<b style="color:var(--brand)">記録中</b>'}${s.memo ? ' ・ ' + esc(s.memo) : ''}</span></span>
+      <button type="button" class="btn small" data-sedit="${esc(s.id)}">編集</button>
+      ${s.endedAt ? `<button type="button" class="btn small" data-sresume="${esc(s.id)}">再開</button>` : ''}
+      <button type="button" class="btn small ghost-danger" data-sdel="${esc(s.id)}">削除</button></div>`).join('') || '<p class="muted">セッションはまだありません。</p>';
+
+  let bytes = 0; try { bytes = new Blob([JSON.stringify(DB)]).size; } catch(e){}
+  $('#storageStats').innerHTML = `
+    <dt>保存状態</dt><dd>${storageOK ? 'LocalStorage に自動保存中' : '<span style="color:var(--danger)">保存不可（一時的なメモリのみ）</span>'}</dd>
+    <dt>セッション</dt><dd>${DB.sessions.length} 件</dd>
+    <dt>投球記録</dt><dd>${DB.pitches.length} 球</dd>
+    <dt>球種 / タグ</dt><dd>${DB.pitchTypes.length} / ${DB.qualityTags.length}</dd>
+    <dt>データ量</dt><dd>約 ${(bytes/1024).toFixed(1)} KB</dd>
+    <dt>最終保存</dt><dd>${esc(fmtDT(DB.lastSavedAt))}</dd>
+    <dt>最終バックアップ</dt><dd>${DB.settings.lastBackupAt ? esc(fmtDT(DB.settings.lastBackupAt)) : '<span style="color:var(--danger)">未実施</span>'}</dd>`;
+  const ct = $('#csvTarget'); const prev = ct.value;
+  ct.innerHTML = ss.map(s => `<option value="${esc(s.id)}">${esc(sessionLabel(s, counts.get(s.id) || 0))}</option>`).join('') || '<option value="">セッションなし</option>';
+  ct.value = (prev && sessionById(prev)) ? prev : (ui.scope && ui.scope !== 'all' && sessionById(ui.scope) ? ui.scope : (ss[0] ? ss[0].id : ''));
+}
+
+async function editTypeModal(t){
+  const body = document.createElement('div');
+  body.innerHTML = `<label class="f" for="mtN">球種名</label><input id="mtN" type="text" maxlength="30" data-autofocus>
+    <div class="two"><div><label class="f" for="mtA">略称（点の中に表示・3文字まで）</label><input id="mtA" type="text" maxlength="3"></div>
+    <div><label class="f" for="mtC">色</label><input id="mtC" type="color"></div></div>
+    <p class="muted">名前を変えると、この球種で記録済みの投球の表示名も変わります。</p>`;
+  $('#mtN', body).value = t.name; $('#mtA', body).value = t.abbr; $('#mtC', body).value = t.color;
+  await openModal({title:'球種の編集', body, buttons:[{label:'キャンセル', value:null}, {label:'保存', cls:'primary', handler: mb => {
+    const name = $('#mtN', mb).value.trim(), abbr = $('#mtA', mb).value.trim() || name.slice(0,1), color = $('#mtC', mb).value;
+    if(!name){ toast('球種名を入力してください', 'error'); return false; }
+    if(DB.pitchTypes.some(x => x.id !== t.id && !x.archived && x.name === name)){ toast('同じ名前の球種があります', 'error'); return false; }
+    t.name = name; t.abbr = abbr.slice(0,3); t.color = /^#[0-9a-f]{6}$/i.test(color) ? color : t.color;
+    persist(); renderAll(); toast('球種を更新しました', 'ok'); return true;
+  }}]});
+}
+async function editTagModal(t){
+  const body = document.createElement('div');
+  body.innerHTML = `<label class="f" for="mgN">タグ名</label><input id="mgN" type="text" maxlength="30" data-autofocus>`;
+  $('#mgN', body).value = t.name;
+  await openModal({title:'質評価タグの編集', body, buttons:[{label:'キャンセル', value:null}, {label:'保存', cls:'primary', handler: mb => {
+    const name = $('#mgN', mb).value.trim();
+    if(!name){ toast('タグ名を入力してください', 'error'); return false; }
+    if(DB.qualityTags.some(x => x.id !== t.id && !x.archived && x.name === name)){ toast('同じ名前のタグがあります', 'error'); return false; }
+    t.name = name; persist(); renderAll(); toast('タグを更新しました', 'ok'); return true;
+  }}]});
+}
+async function editSessionModal(s){
+  const body = document.createElement('div');
+  body.innerHTML = `<label class="f" for="msN">投手名</label><input id="msN" type="text" maxlength="50">
+    <label class="f" for="msD">練習日</label><input id="msD" type="date">
+    <label class="f">想定打者</label><div class="seg wide" id="msH"><button type="button" data-v="">未設定</button><button type="button" data-v="R">右</button><button type="button" data-v="L">左</button></div>
+    <label class="f" for="msM">練習メモ</label><textarea id="msM" rows="3" maxlength="500"></textarea>
+    <p class="muted">想定打者の変更は、これから記録する投球に適用されます（保存済み投球の内角・外角表示は記録時の設定のまま）。</p>`;
+  $('#msN', body).value = s.pitcherName; $('#msD', body).value = s.date; $('#msM', body).value = s.memo;
+  let hand = s.batterHand || '';
+  const paintH = () => $$('#msH button', body).forEach(b => b.setAttribute('aria-pressed', b.dataset.v === hand ? 'true' : 'false'));
+  await openModal({title:'セッションの編集', body, onMount: mb => { paintH(); $('#msH', mb).addEventListener('click', e => { const b = e.target.closest('button'); if(b){ hand = b.dataset.v; paintH(); } }); },
+    buttons:[{label:'キャンセル', value:null}, {label:'保存', cls:'primary', handler: mb => {
+      const name = $('#msN', mb).value.trim(), date = $('#msD', mb).value;
+      if(!name){ toast('投手名を入力してください', 'error'); return false; }
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toast('練習日を正しく入力してください', 'error'); return false; }
+      pushUndo('セッションの編集');
+      s.pitcherName = name.slice(0,50); s.date = date; s.memo = $('#msM', mb).value.trim().slice(0,500); s.batterHand = hand;
+      persist(); renderAll(); toast('セッションを更新しました', 'ok'); return true;
+    }}]});
+}
+
+/* ---- CSV ---- */
+const CSV_HEAD = ['投球ID','セッションID','練習日','投球日時','投手名','セット番号','球種','球速（km/h）','コースx座標','コースy座標','判定','投球結果','全体評価','質評価タグ','メモ','セッション内投球番号','想定打者'];
+function csvCell(v, text=false){
+  if(v === null || v === undefined) return '';
+  let s = String(v);
+  if(text && /^[=+@]/.test(s)) s = "'" + s; // 表計算ソフトでの数式実行を防止
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function buildCSV(ps){
+  const sm = seqMap();
+  const lines = [CSV_HEAD.map(h => csvCell(h)).join(',')];
+  ps.forEach(p => {
+    const s = sessionById(p.sessionId) || {};
+    lines.push([
+      csvCell(p.id), csvCell(p.sessionId), csvCell(s.date), csvCell(localIsoWithOffset(p.recordedAt)), csvCell(s.pitcherName, true),
+      csvCell(p.set), csvCell(typeOf(p).name, true), csvCell(p.speed == null ? null : p.speed.toFixed(1)),
+      csvCell(p.x == null ? null : p.x.toFixed(1)), csvCell(p.y == null ? null : p.y.toFixed(1)),
+      csvCell(p.call ? CALL_MAP[p.call].l : null), csvCell(p.result && p.result !== 'none' ? RESULT_MAP[p.result].l : null),
+      csvCell(p.grade ? GRADE_MAP[p.grade].l : null), csvCell(p.tags.map(tagName).join(' / ') || null, true),
+      csvCell(p.memo || null, true), csvCell(sm.get(p.id)), csvCell(p.batterHand === 'R' ? '右' : p.batterHand === 'L' ? '左' : null)
+    ].join(','));
+  });
+  return '\uFEFF' + lines.join('\r\n') + '\r\n';
+}
+function download(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+function exportCSV(target){
+  let ps, fname;
+  if(target === 'all'){
+    ps = DB.pitches.slice().sort(byTime);
+    const names = Array.from(new Set(DB.sessions.map(s => s.pitcherName)));
+    fname = `bullpen_${safeName(names.length === 1 ? names[0] : '全投手')}_全セッション_${localDateStr().replace(/-/g,'')}.csv`;
+  } else {
+    const s = sessionById(target);
+    if(!s){ toast('出力するセッションを選択してください', 'error'); return; }
+    ps = sessionPitches(s.id);
+    fname = `bullpen_${safeName(s.pitcherName)}_${s.date.replace(/-/g,'')}.csv`;
+  }
+  if(!ps.length){ toast('出力する投球がありません', 'warn'); return; }
+  try { download(new Blob([buildCSV(ps)], {type:'text/csv;charset=utf-8'}), fname); toast(`CSVを出力しました（${ps.length}球）：${fname}`, 'ok'); }
+  catch(e){ toast('CSVの出力に失敗しました：' + e.message, 'error'); }
+}
+
+/* ---- JSON バックアップ・復元 ---- */
+function exportJSON(){
+  const now = new Date();
+  const prevBackup = DB.settings.lastBackupAt;
+  DB.settings.lastBackupAt = now.toISOString();
+  const payload = {app:'BullpenLog', schemaVersion:SCHEMA_VERSION, exportedAt:now.toISOString(), data:DB};
+  const stamp = `${localDateStr(now).replace(/-/g,'')}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+  try {
+    download(new Blob([JSON.stringify(payload, null, 1)], {type:'application/json'}), `bullpen_log_backup_${safeName(DB.settings.pitcherName || 'data')}_${stamp}.json`);
+    persist(); renderAll();
+    toast(`バックアップを出力しました（セッション${DB.sessions.length}件・投球${DB.pitches.length}球）`, 'ok');
+  } catch(e){ DB.settings.lastBackupAt = prevBackup; toast('バックアップの出力に失敗しました：' + e.message, 'error'); }
+}
+function mergeData(cur, inc){
+  const out = JSON.parse(JSON.stringify(cur));
+  const r = {addS:0, skipS:0, addP:0, skipP:0, addT:0};
+  const tIds = new Set(out.pitchTypes.map(t => t.id));
+  inc.pitchTypes.forEach(t => { if(!tIds.has(t.id)){ out.pitchTypes.push(t); tIds.add(t.id); r.addT++; } });
+  const gIds = new Set(out.qualityTags.map(t => t.id));
+  inc.qualityTags.forEach(t => { if(!gIds.has(t.id)){ out.qualityTags.push(t); gIds.add(t.id); } });
+  const sIds = new Set(out.sessions.map(s => s.id));
+  inc.sessions.forEach(s => {
+    if(sIds.has(s.id)){ r.skipS++; return; }
+    const c = Object.assign({}, s);
+    if(!c.endedAt){ const ps = inc.pitches.filter(p => p.sessionId === c.id).sort(byTime); c.endedAt = ps.length ? ps[ps.length-1].recordedAt : c.startedAt; }
+    out.sessions.push(c); sIds.add(c.id); r.addS++;
+  });
+  const pIds = new Set(out.pitches.map(p => p.id));
+  inc.pitches.forEach(p => { if(pIds.has(p.id)){ r.skipP++; return; } out.pitches.push(p); pIds.add(p.id); r.addP++; });
+  r.out = out; return r;
+}
+async function handleRestoreFile(file){
+  if(!file) return;
+  if(file.size > 30*1024*1024){ toast('ファイルが大きすぎます（30MBまで）', 'error'); return; }
+  let text;
+  try { text = await file.text(); } catch(e){ toast('ファイルを読み込めませんでした：' + e.message, 'error'); return; }
+  let obj;
+  try { obj = JSON.parse(text.replace(/^\uFEFF/, '')); } catch(e){ toast('JSONとして読み込めませんでした。既存データは変更していません。（' + e.message + '）', 'error', {duration:9000}); return; }
+  let inc;
+  try { inc = normalizeData(obj); } catch(e){ toast('バックアップの形式が正しくありません：' + e.message + '。既存データは変更していません。', 'error', {duration:10000}); return; }
+  const exp = obj && obj.exportedAt && validIso(obj.exportedAt) ? fmtDT(obj.exportedAt) : '不明';
+  const body = document.createElement('div');
+  body.innerHTML = `<p><b>${esc(file.name)}</b></p><p>出力日時：${esc(exp)}<br>セッション ${inc.sessions.length}件 ・ 投球 ${inc.pitches.length}球 ・ 球種 ${inc.pitchTypes.length}件</p>
+    <p class="muted">現在のデータ：セッション ${DB.sessions.length}件 ・ 投球 ${DB.pitches.length}球</p>
+    <p><b>既存データに追加</b>：IDが同じ記録は重複として追加しません。<br><b>上書きして復元</b>：現在のデータをすべて置き換えます。</p>`;
+  const choice = await openModal({title:'バックアップの復元', body, buttons:[{label:'キャンセル', value:null}, {label:'既存データに追加', value:'merge', cls:'primary'}, {label:'上書きして復元', value:'overwrite', cls:'danger'}]});
+  if(!choice) return;
+  const prev = JSON.stringify(DB);
+  let msg;
+  if(choice === 'overwrite'){
+    const ok = await confirmModal({title:'上書きの最終確認', text:`現在のデータ（セッション${DB.sessions.length}件・投球${DB.pitches.length}球）はすべて置き換えられ、元に戻せません。\n必要なら先に現在のデータをJSONバックアップしてください。`, ok:'上書きする', danger:true});
+    if(!ok) return;
+    DB = inc;
+    msg = `上書きして復元しました（セッション${inc.sessions.length}件・投球${inc.pitches.length}球）`;
+  } else {
+    const r = mergeData(DB, inc); DB = r.out;
+    msg = `追加しました：セッション${r.addS}件・投球${r.addP}球` + (r.skipP || r.skipS ? `（重複のため除外：セッション${r.skipS}件・投球${r.skipP}球）` : '');
+  }
+  if(!persist() && storageOK){ DB = JSON.parse(prev); toast('保存に失敗したため復元を中止しました。既存データはそのままです。', 'error', {duration:9000}); renderAll(); return; }
+  undoStack.length = 0;
+  if(!activeSession()){ DB.activeSessionId = null; }
+  draft = newDraft(null); saveDraft();
+  ui.scope = null; ensureScope(); ui.sumSel = []; ui.recSel = [];
+  renderAll();
+  toast(msg, 'ok', {duration:6000});
+}
+async function wipeAll(){
+  const body = document.createElement('div');
+  body.innerHTML = `<p>投手設定・球種・タグ・セッション・投球記録（${DB.pitches.length}球）をすべて削除します。<b>元に戻せません。</b></p>
+    <p class="muted">念のため、先にJSONバックアップを保存することをおすすめします。</p>
+    <label class="f" for="wipeIn">確認のため「削除」と入力してください</label><input id="wipeIn" type="text" autocomplete="off" data-autofocus>`;
+  const r = await openModal({title:'全データの削除', body, buttons:[{label:'キャンセル', value:null}, {label:'すべて削除', cls:'danger', handler: mb => {
+    if($('#wipeIn', mb).value.trim() !== '削除'){ toast('「削除」と入力してください', 'error'); return false; }
+    return 'wipe';
+  }}]});
+  if(r !== 'wipe') return;
+  DB = defaultData(); draft = newDraft(null);
+  try { localStorage.removeItem(DRAFT_KEY); } catch(e){}
+  undoStack.length = 0; ui.scope = 'all'; ui.sumSel = []; ui.recSel = []; ui.chartTypes.clear();
+  persist(); renderAll(); toast('すべてのデータを削除しました', 'warn');
+}
+
+/* ============================================================
+   全体描画・画面切り替え
+   ============================================================ */
+function renderHeader(){
+  const s = activeSession();
+  const ps = s ? sessionPitches(s.id) : scopeBase();
+  const c = calc(ps);
+  $('#hdrKpi').innerHTML = `<span class="hl">${s ? '記録中' : ui.scope === 'all' ? '全体' : '表示中'}</span><span><b>${c.n}</b>球</span><span>S率 <b>${pct(c.sr)}</b></span><span class="sb">S${c.s}/B${c.b}</span>`;
+  $('#hdrKpi').title = `ストライク ${c.s} / ボール ${c.b}${c.unj ? ` / 未判定 ${c.unj}` : ''}`;
+}
+function renderView(){
+  if(ui.view === 'record') renderRecord();
+  else if(ui.view === 'summary') renderSummary();
+  else if(ui.view === 'history') renderHistory();
+  else renderSettings();
+  document.body.classList.toggle('has-savebar', ui.view === 'record' && !!activeSession());
+}
+function renderAll(){ ensureScope(); renderHeader(); renderView(); }
+function showView(v, push=true){
+  if(!['record','summary','history','settings'].includes(v)) v = 'record';
+  ui.view = v;
+  $$('.view').forEach(el => el.classList.toggle('active', el.id === 'view-' + v));
+  $$('.tabbar button').forEach(b => { if(b.dataset.view === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  if(push){ try { history.replaceState(null, '', '#' + v); } catch(e){} }
+  renderAll();
+  window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   イベント
+   ============================================================ */
+function bind(){
+  $$('.tabbar button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  window.addEventListener('hashchange', () => showView(location.hash.slice(1), false));
+
+  // 開始フォーム
+  $('#btnStart').addEventListener('click', startSession);
+  $('#ssName').addEventListener('keydown', e => { if(e.key === 'Enter') startSession(); });
+  $('#ssName').addEventListener('input', () => { $('#ssName').classList.remove('invalid'); $('#ssNameMsg').textContent = ''; });
+  $('#ssHand').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; ui.ssHand = b.dataset.v; renderRecord(); });
+
+  // セッションバー
+  $('#btnEndSession').addEventListener('click', endSession);
+  $('#btnSetPlus').addEventListener('click', () => changeSet(1));
+  $('#btnSetMinus').addEventListener('click', () => changeSet(-1));
+  $('#sbHand').addEventListener('click', e => {
+    const b = e.target.closest('button'); const s = activeSession(); if(!b || !s) return;
+    s.batterHand = b.dataset.v; persist(); renderRecord();
+  });
+
+  // 球種・判定
+  $('#typeChips').addEventListener('click', e => {
+    const b = e.target.closest('[data-type]'); if(!b) return;
+    draft.pitchTypeId = b.dataset.type; saveDraft(); renderRecord();
+  });
+  $('#callBtns').addEventListener('click', e => {
+    const b = e.target.closest('[data-call]'); if(!b) return;
+    draft.call = draft.call === b.dataset.call ? null : b.dataset.call; saveDraft();
+    $$('#callBtns .callbtn').forEach(x => x.setAttribute('aria-pressed', draft.call === x.dataset.call ? 'true' : 'false'));
+    renderDraftInfo();
+  });
+  // 球速
+  $('#speedInput').addEventListener('input', e => { draft.speedText = e.target.value; saveDraft(); showSpeedMsg(); renderDraftInfo(); });
+  $('#speedInput').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); e.target.blur(); savePitch(); } });
+  $('#btnLastSpeed').addEventListener('click', () => { const s = activeSession(); const v = s && lastSpeedInSession(s.id); if(v == null) return; draft.speedText = String(v); $('#speedInput').value = draft.speedText; saveDraft(); showSpeedMsg(); renderDraftInfo(); });
+  $('#btnNoSpeed').addEventListener('click', () => { draft.speedText = ''; $('#speedInput').value = ''; saveDraft(); showSpeedMsg(); renderDraftInfo(); });
+  // 詳細
+  $('#resultChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; draft.result = b.dataset.v; saveDraft(); renderRecord(); });
+  $('#gradeChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; draft.grade = b.dataset.v === 'none' ? null : (draft.grade === b.dataset.v ? null : b.dataset.v); saveDraft(); renderRecord(); });
+  $('#tagChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; const v = b.dataset.v; draft.tags = draft.tags.includes(v) ? draft.tags.filter(x => x !== v) : draft.tags.concat(v); saveDraft(); renderRecord(); });
+  $('#memoInput').addEventListener('input', e => { draft.memo = e.target.value; saveDraft(); renderDraftInfo(); });
+
+  // コース
+  $('#recZone').addEventListener('click', e => {
+    const s = activeSession(); if(!s) return;
+    const svg = $('#recZone');
+    if(ui.recMode === 'input'){
+      const pt = clientToSvg(svg, e.clientX, e.clientY); if(!pt) return;
+      const [x, y] = fromDisp(pt[0], pt[1]);
+      if(!draft.id){ draft.id = uid('p'); draft.recordedAt = new Date().toISOString(); }
+      draft.x = round1(x); draft.y = round1(y);
+      saveDraft(); renderRecZone(); renderDraftInfo();
+      try { navigator.vibrate && navigator.vibrate(12); } catch(_){}
+    } else {
+      const hits = hitTest(svg, e.clientX, e.clientY);
+      ui.recSel = hits.map(p => p.id); renderRecZone(); renderDetail($('#recDetail'), hits);
+    }
+  });
+  $('#recMode').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; ui.recMode = b.dataset.v; ui.recSel = []; renderRecZone(); });
+  $('#recPast').addEventListener('change', e => { ui.recPast = e.target.value; renderRecZone(); });
+  colorByOptions($('#recColorBy'));
+  $('#recColorBy').addEventListener('change', e => { DB.settings.colorBy = e.target.value; persist(); renderRecZone(); });
+  $('#btnClearCourse').addEventListener('click', () => { draft.x = null; draft.y = null; saveDraft(); renderRecZone(); renderDraftInfo(); });
+  document.addEventListener('click', e => {
+    const z = e.target.closest('[data-zoom]'); if(!z) return;
+    const [which, dir] = z.dataset.zoom.split(':'); const key = which === 'rec' ? 'recZoom' : 'sumZoom';
+    const steps = [1, 1.35, 1.8]; let i = steps.indexOf(ui[key]); if(i < 0) i = 0;
+    i = dir === '+' ? Math.min(steps.length-1, i+1) : Math.max(0, i-1);
+    ui[key] = steps[i];
+    if(which === 'rec') renderRecZone(); else renderSummary();
+  });
+
+  // ドラフト・保存
+  $('#draftInfo').addEventListener('click', async e => {
+    if(!e.target.closest('#btnClearDraft')) return;
+    if(!(await confirmModal({title:'入力をクリア', text:'入力中の内容（コース・判定・球速など）を消去します。', ok:'クリアする'}))) return;
+    draft = newDraft(draft.pitchTypeId); saveDraft(); renderRecord();
+  });
+  $('#btnSave').addEventListener('click', savePitch);
+  $('#btnUndoLast').addEventListener('click', undoLastPitch);
+
+  // 編集ボタン（共通）
+  document.addEventListener('click', e => {
+    const ed = e.target.closest('[data-edit]'); if(ed && !ed.closest('.modal')){ openEditPitch(ed.dataset.edit); return; }
+    const del = e.target.closest('[data-del]'); if(del){ deletePitch(del.dataset.del); return; }
+    const bk = e.target.closest('[data-act="backup"]'); if(bk){ exportJSON(); return; }
+  });
+
+  // サマリー
+  $('#sumScope').addEventListener('change', e => { ui.scope = e.target.value; ui.setFilter = 'all'; ui.sumSel = []; renderAll(); });
+  $('#sumSet').addEventListener('change', e => { ui.setFilter = e.target.value; ui.sumSel = []; renderSummary(); });
+  $('#sumColorBy').addEventListener('change', e => { DB.settings.colorBy = e.target.value; persist(); renderSummary(); });
+  $('#sumTypeChips').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if(!b) return;
+    if(b.dataset.v === '__all') ui.chartTypes.clear();
+    else if(ui.chartTypes.has(b.dataset.v)) ui.chartTypes.delete(b.dataset.v); else ui.chartTypes.add(b.dataset.v);
+    ui.sumSel = []; renderSummary();
+  });
+  $('#sumZone').addEventListener('click', e => { const hits = hitTest($('#sumZone'), e.clientX, e.clientY); ui.sumSel = hits.map(p => p.id); renderSummary(); });
+  const pickSess = e => { const tr = e.target.closest('tr[data-sid]'); if(!tr) return; ui.scope = tr.dataset.sid; ui.setFilter = 'all'; ui.sumSel = []; renderAll(); };
+  $('#cmpSessions').addEventListener('click', pickSess);
+  $('#cmpSessions').addEventListener('keydown', e => { if(e.key === 'Enter') pickSess(e); });
+
+  // 履歴
+  $('#histScope').addEventListener('change', e => { ui.scope = e.target.value; ui.hist.limit = 50; renderAll(); });
+  $('#histType').addEventListener('change', e => { ui.hist.type = e.target.value; ui.hist.limit = 50; renderHistory(); });
+  $('#histCall').addEventListener('change', e => { ui.hist.call = e.target.value; ui.hist.limit = 50; renderHistory(); });
+  $('#histSet').addEventListener('change', e => { ui.hist.set = e.target.value; ui.hist.limit = 50; renderHistory(); });
+  $('#histSort').addEventListener('change', e => { ui.hist.sort = e.target.value; renderHistory(); });
+  let qT = null;
+  $('#histQ').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { ui.hist.q = e.target.value; ui.hist.limit = 50; renderHistory(); }, 200); });
+  $('#btnHistMore').addEventListener('click', () => { ui.hist.limit += 50; renderHistory(); });
+  $('#btnHistUndo').addEventListener('click', () => undoEntry(null));
+
+  // 設定
+  $('#setPitcher').addEventListener('change', e => { DB.settings.pitcherName = e.target.value.trim().slice(0,50); if(persist()) toast('投手名の初期値を保存しました', 'ok'); });
+  $('#setPersp').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; DB.settings.perspective = b.dataset.v; persist(); renderAll(); toast(`${b.textContent}に切り替えました（保存データは変わりません）`, 'ok'); });
+  $('#setCarry').addEventListener('change', e => { DB.settings.carryType = e.target.checked; persist(); });
+  $('#btnAddType').addEventListener('click', () => {
+    const name = $('#newTypeName').value.trim(), abbr = $('#newTypeAbbr').value.trim() || name.slice(0,1), color = $('#newTypeColor').value;
+    if(!name){ toast('球種名を入力してください', 'error'); $('#newTypeName').focus(); return; }
+    if(DB.pitchTypes.some(t => !t.archived && t.name === name)){ toast('同じ名前の球種があります', 'error'); return; }
+    DB.pitchTypes.push({id:uid('pt'), name, abbr:abbr.slice(0,3), color: /^#[0-9a-f]{6}$/i.test(color) ? color : '#0f766e', archived:false});
+    $('#newTypeName').value = ''; $('#newTypeAbbr').value = '';
+    $('#newTypeColor').value = PALETTE[DB.pitchTypes.length % PALETTE.length];
+    persist(); renderAll(); toast(`球種「${name}」を追加しました`, 'ok');
+  });
+  $('#typeList').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if(!b) return;
+    const id = b.dataset.tedit || b.dataset.tdel || b.dataset.trestore; const t = typeById(id); if(!t) return;
+    if(b.dataset.tedit) return editTypeModal(t);
+    if(b.dataset.trestore){ t.archived = false; persist(); renderAll(); toast(`「${t.name}」を復元しました`, 'ok'); return; }
+    const n = DB.pitches.filter(p => p.pitchTypeId === id).length;
+    const ok = await confirmModal({title:'球種の削除', text: n ? `「${t.name}」は${n}球の記録で使われています。\n選択肢から非表示にし、過去の記録は球種名を保ったまま残します。` : `「${t.name}」を削除しますか？`, ok: n ? '非表示にする' : '削除する', danger:true});
+    if(!ok) return;
+    if(n) t.archived = true; else DB.pitchTypes = DB.pitchTypes.filter(x => x.id !== id);
+    if(draft.pitchTypeId === id){ draft.pitchTypeId = null; saveDraft(); }
+    ui.chartTypes.delete(id);
+    persist(); renderAll(); toast(n ? `「${t.name}」を非表示にしました` : `「${t.name}」を削除しました`, 'ok');
+  });
+  $('#newTypeName').addEventListener('keydown', e => { if(e.key === 'Enter') $('#btnAddType').click(); });
+  $('#btnAddTag').addEventListener('click', () => {
+    const name = $('#newTagName').value.trim();
+    if(!name){ toast('タグ名を入力してください', 'error'); return; }
+    if(DB.qualityTags.some(t => !t.archived && t.name === name)){ toast('同じ名前のタグがあります', 'error'); return; }
+    DB.qualityTags.push({id:uid('tg'), name, archived:false}); $('#newTagName').value = '';
+    persist(); renderAll(); toast(`タグ「${name}」を追加しました`, 'ok');
+  });
+  $('#newTagName').addEventListener('keydown', e => { if(e.key === 'Enter') $('#btnAddTag').click(); });
+  $('#tagList').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if(!b) return;
+    const id = b.dataset.gedit || b.dataset.gdel || b.dataset.grestore; const t = DB.qualityTags.find(x => x.id === id); if(!t) return;
+    if(b.dataset.gedit) return editTagModal(t);
+    if(b.dataset.grestore){ t.archived = false; persist(); renderAll(); return; }
+    const n = DB.pitches.filter(p => p.tags.includes(id)).length;
+    const ok = await confirmModal({title:'タグの削除', text: n ? `「${t.name}」は${n}球で使われています。選択肢から非表示にし、過去の記録には残します。` : `「${t.name}」を削除しますか？`, ok: n ? '非表示にする' : '削除する', danger:true});
+    if(!ok) return;
+    if(n) t.archived = true; else DB.qualityTags = DB.qualityTags.filter(x => x.id !== id);
+    draft.tags = draft.tags.filter(x => DB.qualityTags.some(g => g.id === x && !g.archived)); saveDraft();
+    persist(); renderAll();
+  });
+  $('#sessionList').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if(!b) return;
+    const id = b.dataset.sedit || b.dataset.sresume || b.dataset.sdel; const s = sessionById(id); if(!s) return;
+    if(b.dataset.sedit) return editSessionModal(s);
+    if(b.dataset.sresume){
+      const cur = activeSession();
+      const ok = await confirmModal({title:'セッションの再開', text:`${s.date} ${s.pitcherName} の記録を再開します。` + (cur ? `\n記録中の「${cur.date} ${cur.pitcherName}」は終了します。` : ''), ok:'再開する'});
+      if(!ok) return;
+      pushUndo('セッションの再開');
+      if(cur) cur.endedAt = new Date().toISOString();
+      s.endedAt = null; DB.activeSessionId = s.id; ui.scope = s.id;
+      draft = newDraft(null); saveDraft();
+      persist(); showView('record'); toast('セッションを再開しました', 'ok'); return;
+    }
+    const n = DB.pitches.filter(p => p.sessionId === id).length;
+    const ok = await confirmModal({title:'セッションの削除', text:`${s.date} ${s.pitcherName} のセッションと投球${n}球を削除します。`, ok:'削除する', danger:true});
+    if(!ok) return;
+    const ue = pushUndo('セッションの削除');
+    DB.pitches = DB.pitches.filter(p => p.sessionId !== id);
+    DB.sessions = DB.sessions.filter(x => x.id !== id);
+    if(DB.activeSessionId === id){ DB.activeSessionId = null; draft = newDraft(null); saveDraft(); }
+    if(ui.scope === id) ui.scope = null;
+    persist(); renderAll();
+    toast('セッションを削除しました', 'warn', {action:{label:'元に戻す', fn:() => undoEntry(ue)}});
+  });
+  $('#btnCsvSession').addEventListener('click', () => exportCSV($('#csvTarget').value));
+  $('#btnCsvAll').addEventListener('click', () => exportCSV('all'));
+  $('#btnBackup').addEventListener('click', exportJSON);
+  $('#btnRestore').addEventListener('click', () => { $('#restoreFile').value = ''; $('#restoreFile').click(); });
+  $('#restoreFile').addEventListener('change', e => handleRestoreFile(e.target.files && e.target.files[0]));
+  $('#btnWipe').addEventListener('click', wipeAll);
+
+  // 保存不可環境では離脱時に警告
+  window.addEventListener('beforeunload', e => { if(!storageOK && (DB.pitches.length || draftHasContent())){ e.preventDefault(); e.returnValue = ''; } });
+  // 他タブでの変更を反映
+  window.addEventListener('storage', e => {
+    if(e.key !== LS_KEY || !e.newValue) return;
+    try { DB = normalizeData(JSON.parse(e.newValue)); ensureScope(); renderAll(); toast('別のタブでの変更を反映しました', 'info'); } catch(_){}
+  });
+}
+
+/* ============================================================
+   起動
+   ============================================================ */
+load();
+loadDraft();
+ensureScope();
+bind();
+showView(location.hash.slice(1) || 'record', false);
+if(!activeSession() && !DB.sessions.length) setTimeout(() => $('#ssName') && !$('#ssName').value && $('#ssName').focus(), 200);
+
+})();
+</script>
+</body>
+</html>
